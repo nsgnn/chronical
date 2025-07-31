@@ -27,12 +27,15 @@ func (m model) View() string {
 			if m.listIndex == i {
 				cursor = ">"
 			}
-			s += fmt.Sprintf("%s %s by %s\n", cursor, level.name, level.author)
+			s += fmt.Sprintf("%s %s by %s\n", cursor, level.Name, level.Author)
 		}
 		s += "\nPress 'enter' to play a level.\n"
 		s += "Press 'esc' to return to the menu.\n"
 	case gameView:
-		s += "Game view is not yet implemented.\n\n"
+		s += m.engine.View()
+		s += fmt.Sprintf("\n\nCursor: (%d, %d)\n", m.cursorX, m.cursorY)
+		s += "z: primary, x: secondary, backspace: clear\n"
+		s += "arrow keys or hjkl to move\n"
 		s += "Press 'esc' to return to the menu.\n"
 	}
 
