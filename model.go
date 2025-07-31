@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -20,8 +22,8 @@ type model struct {
 	cursorY int
 
 	// menu state
-	levelpacks []LevelPack
-	levels     []Level
+	levelpacks     []LevelPack
+	levels         []Level
 	levelPackIndex int
 	levelIndex     int
 }
@@ -102,19 +104,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					// We're looking at levels, so switch to the game.
 					selectedLevel := m.levels[m.levelIndex]
-					var err error
-					initialSave := selectedLevel.CreateSave(selectedLevel.Initial, false)
+
+					// Try to get an existing save.
+					save, err := m.store.GetSave(selectedLevel.ID)
+					if err != nil {
+						//TODO: log that a new save will be made. This occurs within the new call.
+					}
+
 					baseEngine := &BaseEngine{}
-					m.engine, err = baseEngine.New(selectedLevel, initialSave)
+					m.engine, err = baseEngine.New(selectedLevel, save)
 					if err != nil {
 						panic(err)
 					}
+
 					m.state = gameView
+					m.cursorX = 0
+					m.cursorY = 0
 				}
 			}
 		case gameView:
 			switch key {
 			case "esc":
+				if err := m.store.UpsertSave(&m.engine.(*BaseEngine).Save); err != nil {
+					log.Printf("failed to save progress: %v", err)
+				}
 				m.state = menuView
 			case "up", "k":
 				if m.engine.IsValidCoordinate(m.cursorX, m.cursorY-1) {

@@ -45,12 +45,24 @@ func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 		s = l.CreateSave(l.Initial, false)
 	}
 
-	lines := strings.Split(s.State, "\n")
-	grid := make([][]Cell, len(lines))
-	for y, line := range lines {
-		grid[y] = make([]Cell, len(line))
-		for x, r := range line {
-			grid[y][x] = *NewCell(x, y, &r)
+	initialLines := strings.Split(l.Initial, "\n")
+	savedLines := strings.Split(s.State, "\n")
+
+	grid := make([][]Cell, len(initialLines))
+	for y, row := range initialLines {
+		grid[y] = make([]Cell, len(row))
+		for x, initialChar := range row {
+			if initialChar != '.' {
+				grid[y][x] = *NewCell(x, y, &initialChar)
+				continue
+			}
+
+			savedChar := rune(savedLines[y][x])
+			cell := NewCell(x, y, nil)
+			if savedChar != ' ' && savedChar != '.' {
+				cell.EnterValue(savedChar)
+			}
+			grid[y][x] = *cell
 		}
 	}
 

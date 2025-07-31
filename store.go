@@ -60,7 +60,7 @@ func (s *Store) Migrate() error {
 	_, err = s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS saves (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			level_id INTEGER NOT NULL,
+			level_id INTEGER NOT NULL UNIQUE,
 			state TEXT NOT NULL,
 			solved BOOLEAN NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
