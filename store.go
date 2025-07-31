@@ -33,7 +33,7 @@ func (s *Store) Migrate() error {
 	_, err := s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS level_packs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
+			name TEXT NOT NULL UNIQUE,
 			author TEXT,
 			version INTEGER NOT NULL DEFAULT 1,
 			description TEXT
@@ -51,7 +51,8 @@ func (s *Store) Migrate() error {
 			initial_state TEXT NOT NULL,
 			solution TEXT NOT NULL,
 			engine TEXT NOT NULL,
-			FOREIGN KEY (level_pack_id) REFERENCES level_packs(id)
+			FOREIGN KEY (level_pack_id) REFERENCES level_packs(id),
+			UNIQUE(level_pack_id, name)
 		);
 	`)
 	if err != nil {
@@ -73,16 +74,16 @@ func (s *Store) Migrate() error {
 
 // UpsertLevelPack inserts or updates a level pack.
 func (s *Store) UpsertLevelPack(pack *LevelPack) error {
-	_, err := s.db.Exec(`
-		INSERT INTO level_packs (id, name, author, version, description)
-		VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET
-			name = excluded.name,
+	row := s.db.QueryRow(`
+		INSERT INTO level_packs (name, author, version, description)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(name) DO UPDATE SET
 			author = excluded.author,
 			version = excluded.version,
-			description = excluded.description;
-	`, pack.ID, pack.Name, pack.Author, pack.Version, pack.Description)
-	return err
+			description = excluded.description
+		RETURNING id;
+	`, pack.Name, pack.Author, pack.Version, pack.Description)
+	return row.Scan(&pack.ID)
 }
 
 // GetLevelPack retrieves a level pack by its ID.
@@ -130,16 +131,14 @@ func (s *Store) GetAllLevelPacks() ([]LevelPack, error) {
 // UpsertLevel inserts or updates a level.
 func (s *Store) UpsertLevel(level *Level, levelPackID int) error {
 	_, err := s.db.Exec(`
-		INSERT INTO levels (id, level_pack_id, name, author, initial_state, solution, engine)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET
-			level_pack_id = excluded.level_pack_id,
-			name = excluded.name,
+		INSERT INTO levels (level_pack_id, name, author, initial_state, solution, engine)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT(level_pack_id, name) DO UPDATE SET
 			author = excluded.author,
 			initial_state = excluded.initial_state,
 			solution = excluded.solution,
 			engine = excluded.engine;
-	`, level.ID, levelPackID, level.Name, level.Author, level.Initial, level.Solution, level.Engine)
+	`, levelPackID, level.Name, level.Author, level.Initial, level.Solution, level.Engine)
 	return err
 }
 

@@ -38,6 +38,9 @@ type GameEngine interface {
 	Width() int
 	Height() int
 	IsValidCoordinate(x, y int) bool
+	GetSave() *Save
+	GetLevel() Level
+	GetGameName() string
 }
 
 func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
@@ -63,12 +66,11 @@ func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 		}
 	}
 
-	return &BaseEngine{
-		GameName: l.Engine,
-		Level:    l,
-		Save:     *s,
-		Grid:     grid,
-	}, nil
+	e.GameName = l.Engine
+	e.Level = l
+	e.Save = *s
+	e.Grid = grid
+	return e, nil
 }
 
 func (e *BaseEngine) EvaluateSolution() (bool, error) {
@@ -80,21 +82,11 @@ func (e *BaseEngine) IsValidCoordinate(x, y int) bool {
 }
 
 func (e *BaseEngine) PrimaryAction(x, y int) error {
-	if !e.IsValidCoordinate(x, y) {
-		return errors.New("coordinates out of bounds")
-	}
-	e.Grid[y][x].EnterValue('P') // Placeholder
-	e.updateSaveState()
-	return nil
+	return errors.New("not implemented")
 }
 
 func (e *BaseEngine) SecondaryAction(x, y int) error {
-	if !e.IsValidCoordinate(x, y) {
-		return errors.New("coordinates out of bounds")
-	}
-	e.Grid[y][x].EnterValue('S') // Placeholder
-	e.updateSaveState()
-	return nil
+	return errors.New("not implemented")
 }
 
 func (e *BaseEngine) ClearCell(x, y int) error {
@@ -170,4 +162,16 @@ func (e *BaseEngine) updateSaveState() {
 	} else {
 		e.Save.Solved = solved
 	}
+}
+
+func (e *BaseEngine) GetSave() *Save {
+	return &e.Save
+}
+
+func (e *BaseEngine) GetLevel() Level {
+	return e.Level
+}
+
+func (e *BaseEngine) GetGameName() string {
+	return e.GameName
 }

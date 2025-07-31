@@ -105,17 +105,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// We're looking at levels, so switch to the game.
 					selectedLevel := m.levels[m.levelIndex]
 
-					// Try to get an existing save.
 					save, err := m.store.GetSave(selectedLevel.ID)
 					if err != nil {
 						log.Printf("event=\"no_save_file_found\" level_id=%d", selectedLevel.ID)
 					}
 
-					baseEngine := &BaseEngine{}
-					m.engine, err = baseEngine.New(selectedLevel, save)
+					var engine GameEngine
+					switch selectedLevel.Engine {
+					case "nonogram":
+						engine, err = new(NonogramEngine).New(selectedLevel, save)
+					default:
+						log.Printf("event=\"engine_not_found\" level_engine=\"%v\"", selectedLevel.Engine)
+						selectedLevel.Engine = "fallback" // Set this so when the engine grabs the game name, it properly logs it below.
+						engine, err = new(DebugEngine).New(selectedLevel, save)
+					}
 					if err != nil {
 						panic(err)
 					}
+					log.Printf("event=\"created_engine\" engine_type=\"%v\"", engine.GetGameName())
+					m.engine = engine
 
 					m.state = gameView
 					m.cursorX = 0
@@ -125,12 +133,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case gameView:
 			switch key {
 			case "esc":
-				baseEngine := m.engine.(*BaseEngine)
-				if baseEngine.Save.State != baseEngine.Level.Initial {
-					if err := m.store.UpsertSave(&baseEngine.Save); err != nil {
-						log.Printf("event=\"save_progress_failed\" level_id=%d err=\"%v\"", baseEngine.Level.ID, err)
+				save := m.engine.GetSave()
+				level := m.engine.GetLevel()
+				if save.State != level.Initial {
+					if err := m.store.UpsertSave(save); err != nil {
+						log.Printf("event=\"save_progress_failed\" level_id=%d err=\"%v\"", level.ID, err)
 					} else {
-						log.Printf("event=\"save_progress_success\" level_id=%d solved=\"%v\"", baseEngine.Level.ID, baseEngine.Save.Solved)
+						log.Printf("event=\"save_progress_success\" level_id=%d solved=\"%v\"", level.ID, save.Solved)
 					}
 				}
 				m.state = menuView
