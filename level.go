@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"strings"
 )
 
 type Level struct {
@@ -23,6 +24,7 @@ func (l *Level) Validate() error {
 	if l.Solution == "" {
 		return errors.New("solution cannot be empty")
 	}
+	l.SetDimensions()
 	if l.Width <= 0 || l.Height <= 0 {
 		return errors.New("level dimensions cannot be zero or negative")
 	}
@@ -31,12 +33,32 @@ func (l *Level) Validate() error {
 
 func (l *Level) CreateSave(state string, solved bool) *Save {
 	if err := l.Validate(); err != nil {
-		log.Println("creating save for invalid level. red flag")
+		log.Printf("event=\"invalid_level_save\" level_id=%d, err=\"%v\"", l.ID, err)
+	} else {
+		log.Printf("event=\"valid_level_save\" level_id=%d, state=\"%v\"", l.ID, state)
+	}
+	if solved {
+		log.Printf("event=\"solved_level_saved\" level_id=%d", l.ID)
 	}
 	return &Save{
 		LevelID: l.ID,
 		State:   state,
 		Solved:  solved,
+	}
+}
+
+func (l *Level) SetDimensions() {
+	if l.Initial == "" {
+		l.Width = 0
+		l.Height = 0
+		return
+	}
+	lines := strings.Split(strings.TrimSpace(l.Initial), "\n")
+	l.Height = len(lines)
+	if l.Height > 0 {
+		l.Width = len(lines[0])
+	} else {
+		l.Width = 0
 	}
 }
 

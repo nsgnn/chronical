@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"strings"
-
 	"github.com/charmbracelet/lipgloss"
+	"log"
+	"strings"
 )
 
 var (
@@ -42,7 +42,10 @@ type GameEngine interface {
 
 func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 	if s == nil {
+		log.Printf("event=\"EmptyLevelLoad\" level_id=%d", l.ID)
 		s = l.CreateSave(l.Initial, false)
+	} else {
+		log.Printf("event=\"StatefulLevelLoad\" level_id=%d state=\"%v\"", l.ID, s.State)
 	}
 
 	initialLines := strings.Split(l.Initial, "\n")
@@ -52,16 +55,10 @@ func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 	for y, row := range initialLines {
 		grid[y] = make([]Cell, len(row))
 		for x, initialChar := range row {
-			if initialChar != '.' {
-				grid[y][x] = *NewCell(x, y, &initialChar)
-				continue
-			}
+			var cell *Cell
+			savedCharRune := rune(savedLines[y][x])
+			cell = NewCell(y, x, &initialChar, &savedCharRune)
 
-			savedChar := rune(savedLines[y][x])
-			cell := NewCell(x, y, nil)
-			if savedChar != ' ' && savedChar != '.' {
-				cell.EnterValue(savedChar)
-			}
 			grid[y][x] = *cell
 		}
 	}

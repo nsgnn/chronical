@@ -15,6 +15,8 @@ levels:
         213
         431
       engine: debug
+      width: 0
+      height: 0
     - id: 102
       name: A Little Trickier
       author: Beth
@@ -29,3 +31,5 @@ levels:
         1324
         2431
       engine: debug
+      width: 0
+      height: 0

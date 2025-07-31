@@ -59,17 +59,21 @@ func (c *Cell) View() string {
 	return string(c.value)
 }
 
-func NewCell(x, y int, g *rune) *Cell {
+func NewCell(x, y int, i *rune, g *rune) *Cell {
 	cell := &Cell{
 		x:     x,
 		y:     y,
 		state: empty,
 		value: ' ',
 	}
-	if g != nil && *g != '.' && *g != ' ' {
-		cell.value = *g
+	if i != nil && *i != '.' && *i != ' ' {
+		cell.value = *i
 		cell.state = given
+	} else if g != nil && *g != '.' && *g != ' ' {
+		cell.value = *g
+		cell.state = filled
 	}
+
 	log.Printf("event=\"new_cell\" x=%d y=%d value=%c state=%d", cell.x, cell.y, cell.value, cell.state)
 	return cell
 }

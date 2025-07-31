@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime/debug"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,9 +30,7 @@ var rootCmd = &cobra.Command{
 
 		p := tea.NewProgram(m)
 		if _, err := p.Run(); err != nil {
-			log.Printf("unable to run tui: %v", err)
-			debug.PrintStack()
-			os.Exit(1)
+			log.Fatalf("event=\"tui_failed\" err=\"%v\"", err)
 		}
 	},
 }
@@ -93,7 +90,6 @@ func main() {
 	log.SetOutput(f)
 
 	if err := rootCmd.Execute(); err != nil {
-		log.Printf("root command failed: %v", err)
-		os.Exit(1)
+		log.Fatalf("event=\"root_command_failed\" err=\"%v\"", err)
 	}
 }

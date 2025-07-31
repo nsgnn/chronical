@@ -40,7 +40,7 @@ func (m model) View() string {
 			for i, l := range m.levels {
 				save, err := m.store.GetSave(l.ID)
 				if err != nil {
-					log.Println("no save file found")
+					log.Printf("event=\"no_save_file_found\" level_id=%d", l.ID)
 				}
 
 				saveStatus := "no save"

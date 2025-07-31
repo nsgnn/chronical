@@ -87,7 +87,7 @@ func (s *Store) UpsertLevelPack(pack *LevelPack) error {
 
 // GetLevelPack retrieves a level pack by its ID.
 func (s *Store) GetLevelPack(id int) (*LevelPack, error) {
-	log.Printf("Getting level pack with id %d", id)
+	log.Printf("event=\"get_level_pack\" id=%d", id)
 	row := s.db.QueryRow(`
 		SELECT id, name, author, version, description
 		FROM level_packs
@@ -98,13 +98,13 @@ func (s *Store) GetLevelPack(id int) (*LevelPack, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Found level pack: %s", pack.Name)
+	log.Printf("event=\"found_level_pack\" name=\"%s\"", pack.Name)
 	return pack, nil
 }
 
 // GetLevelPacks retrieves all level packs.
 func (s *Store) GetAllLevelPacks() ([]LevelPack, error) {
-	log.Println("Getting all level packs")
+	log.Println("event=\"get_all_level_packs\"")
 	rows, err := s.db.Query(`
 		SELECT id, name, author, version, description
 		FROM level_packs;
@@ -123,7 +123,7 @@ func (s *Store) GetAllLevelPacks() ([]LevelPack, error) {
 		}
 		packs = append(packs, pack)
 	}
-	log.Printf("Found %d level packs", len(packs))
+	log.Printf("event=\"found_level_packs\" count=%d", len(packs))
 	return packs, nil
 }
 
@@ -145,7 +145,7 @@ func (s *Store) UpsertLevel(level *Level, levelPackID int) error {
 
 // GetLevel retrieves a level by its ID.
 func (s *Store) GetLevel(id int) (*Level, error) {
-	log.Printf("Getting level with id %d", id)
+	log.Printf("event=\"get_level\" id=%d", id)
 	row := s.db.QueryRow(`
 		SELECT id, name, author, initial_state, solution, engine
 		FROM levels
@@ -156,13 +156,13 @@ func (s *Store) GetLevel(id int) (*Level, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Found level: %s", level.Name)
+	log.Printf("event=\"found_level\" name=\"%s\"", level.Name)
 	return level, nil
 }
 
 // GetLevelsByPack retrieves all levels for a given level pack.
 func (s *Store) GetLevelsByPack(levelPackID int) ([]Level, error) {
-	log.Printf("Getting levels for level pack with id %d", levelPackID)
+	log.Printf("event=\"get_levels_by_pack\" level_pack_id=%d", levelPackID)
 	rows, err := s.db.Query(`
 		SELECT id, name, author, initial_state, solution, engine
 		FROM levels
@@ -182,13 +182,21 @@ func (s *Store) GetLevelsByPack(levelPackID int) ([]Level, error) {
 		}
 		levels = append(levels, level)
 	}
-	log.Printf("Found %d levels for level pack with id %d", len(levels), levelPackID)
+	log.Printf("event=\"found_levels_for_pack\" count=%d level_pack_id=%d", len(levels), levelPackID)
 	return levels, nil
 }
 
 // UpsertSave inserts or updates a save.
 func (s *Store) UpsertSave(save *Save) error {
-	_, err := s.db.Exec(`
+	level, err := s.GetLevel(save.LevelID)
+	if err != nil {
+		return err
+	}
+	if level.Initial == save.State {
+		log.Printf("event=\"delete_save_on_upsert\" level_id=%d", save.LevelID)
+		return s.DeleteSave(save.LevelID)
+	}
+	_, err = s.db.Exec(`
 		INSERT INTO saves (level_id, state, solved, updated_at)
 		VALUES (?, ?, ?, CURRENT_TIMESTAMP)
 		ON CONFLICT(level_id) DO UPDATE SET
@@ -201,7 +209,7 @@ func (s *Store) UpsertSave(save *Save) error {
 
 // GetSave retrieves a save by its level ID.
 func (s *Store) GetSave(levelID int) (*Save, error) {
-	log.Printf("Getting save for level with id %d", levelID)
+	log.Printf("event=\"get_save\" level_id=%d", levelID)
 	row := s.db.QueryRow(`
 		SELECT level_id, state, solved, created_at, updated_at
 		FROM saves
@@ -212,7 +220,7 @@ func (s *Store) GetSave(levelID int) (*Save, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Found save for level with id %d", levelID)
+	log.Printf("event=\"found_save\" level_id=%d", levelID)
 	return save, nil
 }
 
@@ -227,7 +235,7 @@ func (s *Store) DeleteSave(levelID int) error {
 
 // GetAllLevels is added to satisfy the model.go dependency.
 func (s *Store) GetAllLevels() ([]Level, error) {
-	log.Println("Getting all levels")
+	log.Println("event=\"get_all_levels\"")
 	rows, err := s.db.Query(`
 		SELECT id, name, author, initial_state, solution, engine
 		FROM levels;
@@ -246,6 +254,6 @@ func (s *Store) GetAllLevels() ([]Level, error) {
 		}
 		levels = append(levels, level)
 	}
-	log.Printf("Found %d levels", len(levels))
+	log.Printf("event=\"found_levels\" count=%d", len(levels))
 	return levels, nil
 }

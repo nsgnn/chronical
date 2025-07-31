@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,6 +25,11 @@ func (s *Store) ExportLevelPack(levelPackID int, path string) error {
 	levels, err := s.GetLevelsByPack(levelPackID)
 	if err != nil {
 		return err
+	}
+
+	for i := range levels {
+		levels[i].Initial = strings.ReplaceAll(levels[i].Initial, " ", ".")
+		levels[i].Solution = strings.ReplaceAll(levels[i].Solution, " ", ".")
 	}
 
 	levelPackYAML := LevelPackYAML{
@@ -65,6 +71,9 @@ func (s *Store) ImportLevelPack(path string) error {
 	}
 
 	for _, level := range levelPackYAML.Levels {
+		level.Initial = strings.ReplaceAll(level.Initial, ".", " ")
+		level.Solution = strings.ReplaceAll(level.Solution, ".", " ")
+		level.SetDimensions()
 		if err := s.UpsertLevel(&level, levelPack.ID); err != nil {
 			return err
 		}
