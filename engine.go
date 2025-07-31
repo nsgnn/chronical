@@ -2,12 +2,11 @@ package main
 
 import (
 	"errors"
-	"github.com/charmbracelet/lipgloss"
 	"log"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
-
-
 
 // BaseEngine implements the GameEngine interface.
 type BaseEngine struct {

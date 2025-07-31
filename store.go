@@ -256,3 +256,36 @@ func (s *Store) GetAllLevels() ([]Level, error) {
 	log.Printf("event=\"found_levels\" count=%d", len(levels))
 	return levels, nil
 }
+
+// CountLevels counts the total number of levels.
+func (s *Store) CountLevels() (int, error) {
+	log.Println("event=\"count_levels\"")
+	row := s.db.QueryRow(`
+		SELECT COUNT(*)
+		FROM levels;
+	`)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	log.Printf("event=\"counted_levels\" count=%d", count)
+	return count, nil
+}
+
+// CountSolvedLevels counts the number of solved levels.
+func (s *Store) CountSolvedLevels() (int, error) {
+	log.Println("event=\"count_solved_levels\"")
+	row := s.db.QueryRow(`
+		SELECT COUNT(*)
+		FROM saves
+		WHERE solved = 1;
+	`)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	log.Printf("event=\"counted_solved_levels\" count=%d", count)
+	return count, nil
+}
