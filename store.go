@@ -216,6 +216,15 @@ func (s *Store) GetSave(levelID int) (*Save, error) {
 	return save, nil
 }
 
+// DeleteSave deletes a save by its level ID.
+func (s *Store) DeleteSave(levelID int) error {
+	_, err := s.db.Exec(`
+		DELETE FROM saves
+		WHERE level_id = ?;
+	`, levelID)
+	return err
+}
+
 // GetAllLevels is added to satisfy the model.go dependency.
 func (s *Store) GetAllLevels() ([]Level, error) {
 	log.Println("Getting all levels")

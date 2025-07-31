@@ -108,7 +108,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// Try to get an existing save.
 					save, err := m.store.GetSave(selectedLevel.ID)
 					if err != nil {
-						//TODO: log that a new save will be made. This occurs within the new call.
+						log.Println("No save file found, creating a new one.")
 					}
 
 					baseEngine := &BaseEngine{}
@@ -125,8 +125,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case gameView:
 			switch key {
 			case "esc":
-				if err := m.store.UpsertSave(&m.engine.(*BaseEngine).Save); err != nil {
-					log.Printf("failed to save progress: %v", err)
+				baseEngine := m.engine.(*BaseEngine)
+				if baseEngine.Save.State == baseEngine.Level.Initial {
+					if err := m.store.DeleteSave(baseEngine.Level.ID); err != nil {
+						log.Printf("failed to delete save: %v", err)
+					}
+				} else {
+					if err := m.store.UpsertSave(&baseEngine.Save); err != nil {
+						log.Printf("failed to save progress: %v", err)
+					}
 				}
 				m.state = menuView
 			case "up", "k":

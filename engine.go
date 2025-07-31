@@ -14,7 +14,7 @@ var (
 	cursorStyle = cellStyle.
 			Border(lipgloss.ThickBorder(), true)
 	givenStyle = cellStyle.
-			Foreground(lipgloss.Color("242")) // Gray for given cells
+			BorderForeground(lipgloss.Color("242")) // Gray for given cells
 	filledStyle  = cellStyle
 	invalidStyle = cellStyle.
 			BorderForeground(lipgloss.Color("196")) // Red border for invalid
@@ -22,10 +22,10 @@ var (
 
 // BaseEngine implements the GameEngine interface.
 type BaseEngine struct {
-	Name  string
-	Level Level
-	Save  Save
-	Grid  [][]Cell
+	GameName string
+	Level    Level
+	Save     Save
+	Grid     [][]Cell
 }
 
 type GameEngine interface {
@@ -67,10 +67,10 @@ func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 	}
 
 	return &BaseEngine{
-		Name:  "DebugEngine",
-		Level: l,
-		Save:  *s,
-		Grid:  grid,
+		GameName: l.Engine,
+		Level:    l,
+		Save:     *s,
+		Grid:     grid,
 	}, nil
 }
 
@@ -79,7 +79,7 @@ func (e *BaseEngine) EvaluateSolution() (bool, error) {
 }
 
 func (e *BaseEngine) IsValidCoordinate(x, y int) bool {
-	return y < len(e.Grid) && x < len(e.Grid[y]) && y >= 0 && x >= 0
+	return y >= 0 && y < len(e.Grid) && x >= 0 && x < len(e.Grid[y])
 }
 
 func (e *BaseEngine) PrimaryAction(x, y int) error {
@@ -92,7 +92,7 @@ func (e *BaseEngine) PrimaryAction(x, y int) error {
 }
 
 func (e *BaseEngine) SecondaryAction(x, y int) error {
-	if !e.IsValidCoordinate(x, y) { // TODO: extract this logic to a function that accepts (x, y) and returns if it is a valid coordinate.
+	if !e.IsValidCoordinate(x, y) {
 		return errors.New("coordinates out of bounds")
 	}
 	e.Grid[y][x].EnterValue('S') // Placeholder
@@ -134,7 +134,18 @@ func (e *BaseEngine) View(cursorX, cursorY int) string {
 		}
 		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowStrings...))
 	}
-	return lipgloss.JoinVertical(lipgloss.Left, rows...)
+	s := lipgloss.JoinVertical(lipgloss.Left, rows...)
+	if e.Grid[cursorY][cursorX].state != given {
+		s += "\nz: primary, x: secondary, backspace: clear\n"
+	} else {
+		s += "\n\n"
+	}
+	s += "arrow keys or hjkl to move\n"
+	s += "Press 'esc' to return to the menu.\n"
+	if e.Save.Solved {
+		s += "Congrats!\n"
+	}
+	return s
 }
 
 func (e *BaseEngine) Width() int {

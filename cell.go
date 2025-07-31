@@ -66,7 +66,7 @@ func NewCell(x, y int, g *rune) *Cell {
 		state: empty,
 		value: ' ',
 	}
-	if g != nil && *g != '.' {
+	if g != nil && *g != '.' && *g != ' ' {
 		cell.value = *g
 		cell.state = given
 	}
