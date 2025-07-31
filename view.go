@@ -13,7 +13,16 @@ var (
 	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
 
-	//define styles as variables here. No other styling should be used.
+	cellStyle = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder(), true).
+			Padding(0, 1)
+	cursorStyle = cellStyle.
+			Border(lipgloss.ThickBorder(), true)
+	givenStyle = cellStyle.
+			BorderForeground(lipgloss.Color("242")) // Gray for given cells
+	filledStyle  = cellStyle
+	invalidStyle = cellStyle.
+			BorderForeground(lipgloss.Color("196")) // Red border for invalid
 )
 
 func (m model) View() string {

@@ -107,9 +107,9 @@ func (e *NonogramEngine) SecondaryAction(x, y int) error {
 	return nil
 }
 
-// EvaluateSolution checks if the current grid state matches the hints.
 func (e *NonogramEngine) EvaluateSolution() (bool, error) {
-	currentRows, currentCol := e.generateHints(e.Save.State)
+	sanitized_known_empty_save := strings.ReplaceAll(e.Save.State, string(KnownEmptyTile), " ")
+	currentRows, currentCol := e.generateHints(sanitized_known_empty_save)
 
 	// Compare row hints
 	if len(currentRows) != len(e.RowHints) {
@@ -167,31 +167,23 @@ func (e *NonogramEngine) View(cursorX, cursorY int) string {
 		b.WriteString(strings.Repeat(" ", maxRowHints*3)) // Spacer
 		for _, hints := range e.ColHints {
 			if i < len(hints) {
-				b.WriteString(fmt.Sprintf(" %2d ", hints[i]))
+				b.WriteString(fmt.Sprintf("  %-2d ", hints[i]))
 			} else {
-				b.WriteString("    ")
+				b.WriteString("     ")
 			}
 		}
 		b.WriteRune('\n')
 	}
 
 	// Draw separator
-	b.WriteString(strings.Repeat(" ", maxRowHints*3))
+	b.WriteString(strings.Repeat("   ", maxRowHints*3))
 	b.WriteString(strings.Repeat("----", e.Width()))
 	b.WriteRune('\n')
 
 	// Draw grid and row hints
 	for y, row := range e.Grid {
-		// Draw row hints
-		hints := e.RowHints[y]
-		b.WriteString(strings.Repeat(" ", (maxRowHints-len(hints))*3))
-		for _, hint := range hints {
-			b.WriteString(fmt.Sprintf("%2d ", hint))
-		}
-		b.WriteString("|")
-
-		// Draw grid
-		var rowStrings []string
+		// Render all cells for the current row
+		var rowCellRenders []string
 		for x, cell := range row {
 			var style lipgloss.Style
 			switch cell.state {
@@ -208,10 +200,38 @@ func (e *NonogramEngine) View(cursorX, cursorY int) string {
 			if x == cursorX && y == cursorY {
 				style = cursorStyle
 			}
-			rowStrings = append(rowStrings, style.Render(string(cell.value)))
+			rowCellRenders = append(rowCellRenders, style.Render(string(cell.value)))
 		}
-		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, rowStrings...))
-		b.WriteRune('\n')
+
+		// Join them horizontally to get a multi-line string for the grid row
+		gridRowRender := lipgloss.JoinHorizontal(lipgloss.Top, rowCellRenders...)
+		gridRowLines := strings.Split(gridRowRender, "\n")
+
+		// Prepare hints string for the middle line
+		hints := e.RowHints[y]
+		var hintsBuilder strings.Builder
+		hintsBuilder.WriteString(strings.Repeat(" ", (maxRowHints-len(hints))*3))
+		for _, hint := range hints {
+			hintsBuilder.WriteString(fmt.Sprintf("%2d ", hint))
+		}
+		hintsString := hintsBuilder.String()
+
+		// Prepare padding for hints for top and bottom lines
+		hintsPadding := strings.Repeat(" ", maxRowHints*3)
+
+		// A cell is 3 characters tall. The hints should be on the middle line.
+		for i := range 3 {
+			if i == 1 { // Middle line for hints
+				b.WriteString(hintsString)
+			} else {
+				b.WriteString(hintsPadding)
+			}
+			// b.WriteString("|")
+			if i < len(gridRowLines) {
+				b.WriteString(gridRowLines[i])
+			}
+			b.WriteRune('\n')
+		}
 	}
 
 	s := b.String()

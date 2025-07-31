@@ -7,18 +7,7 @@ import (
 	"strings"
 )
 
-var (
-	cellStyle = lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder(), true).
-			Padding(0, 1)
-	cursorStyle = cellStyle.
-			Border(lipgloss.ThickBorder(), true)
-	givenStyle = cellStyle.
-			BorderForeground(lipgloss.Color("242")) // Gray for given cells
-	filledStyle  = cellStyle
-	invalidStyle = cellStyle.
-			BorderForeground(lipgloss.Color("196")) // Red border for invalid
-)
+
 
 // BaseEngine implements the GameEngine interface.
 type BaseEngine struct {
