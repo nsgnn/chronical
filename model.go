@@ -11,30 +11,33 @@ const (
 )
 
 type model struct {
-	store  *Store
-	state  uint
-	engine GameEngine
-	//define submodels here
-
-	levels    []Level
-	listIndex int
+	store *Store
+	state uint
 
 	// game state
+	engine  GameEngine
 	cursorX int
 	cursorY int
+
+	// menu state
+	levelpacks []LevelPack
+	levels     []Level
+	levelPackIndex int
+	levelIndex     int
 }
 
 func NewModel(store *Store) model {
-	levels, err := store.GetAllLevels()
+	levelpacks, err := store.GetAllLevelPacks()
 	if err != nil {
 		// In a real app, you might want to handle this more gracefully
 		panic(err)
 	}
+
 	return model{
-		store:  store,
-		state:  menuView,
-		engine: nil,
-		levels: levels,
+		store:      store,
+		state:      menuView,
+		engine:     nil,
+		levelpacks: levelpacks,
 	}
 }
 
@@ -43,15 +46,6 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmds []tea.Cmd
-		// cmd tea.Cmd
-	)
-	//update submodels
-	// Example:
-	// m.gameboard, cmd = m.gameboard.Update(msg)
-	// cmds = append(cmds, cmd)
-
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		key := msg.String()
@@ -68,38 +62,76 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "q", "ctrl+c":
 				return m, tea.Quit
 			case "esc":
+				// If we're looking at levels, go back to level packs.
+				if m.levels != nil {
+					m.levels = nil
+					m.levelIndex = 0
+					return m, nil
+				}
 				m.state = menuView
 			case "up", "k":
-				if m.listIndex > 0 {
-					m.listIndex--
+				if m.levels == nil {
+					if m.levelPackIndex > 0 {
+						m.levelPackIndex--
+					}
+				} else {
+					if m.levelIndex > 0 {
+						m.levelIndex--
+					}
 				}
 			case "down", "j":
-				if m.listIndex < len(m.levels)-1 {
-					m.listIndex++
+				if m.levels == nil {
+					if m.levelPackIndex < len(m.levelpacks)-1 {
+						m.levelPackIndex++
+					}
+				} else {
+					if m.levelIndex < len(m.levels)-1 {
+						m.levelIndex++
+					}
 				}
 			case "enter":
-				selectedLevel := m.levels[m.listIndex]
-				var err error
-				initialSave := selectedLevel.CreateSave(selectedLevel.Initial, false)
-				baseEngine := &BaseEngine{}
-				m.engine, err = baseEngine.New(selectedLevel, initialSave)
-				if err != nil {
-					panic(err)
+				if m.levels == nil {
+					// We're looking at level packs, so switch to levels.
+					selectedPack := m.levelpacks[m.levelPackIndex]
+					levels, err := m.store.GetLevelsByPack(selectedPack.ID)
+					if err != nil {
+						panic(err)
+					}
+					m.levels = levels
+					m.levelIndex = 0
+				} else {
+					// We're looking at levels, so switch to the game.
+					selectedLevel := m.levels[m.levelIndex]
+					var err error
+					initialSave := selectedLevel.CreateSave(selectedLevel.Initial, false)
+					baseEngine := &BaseEngine{}
+					m.engine, err = baseEngine.New(selectedLevel, initialSave)
+					if err != nil {
+						panic(err)
+					}
+					m.state = gameView
 				}
-				m.state = gameView
 			}
 		case gameView:
 			switch key {
 			case "esc":
 				m.state = menuView
 			case "up", "k":
-				m.cursorY--
+				if m.engine.IsValidCoordinate(m.cursorX, m.cursorY-1) {
+					m.cursorY--
+				}
 			case "down", "j":
-				m.cursorY++
+				if m.engine.IsValidCoordinate(m.cursorX, m.cursorY+1) {
+					m.cursorY++
+				}
 			case "left", "h":
-				m.cursorX--
+				if m.engine.IsValidCoordinate(m.cursorX-1, m.cursorY) {
+					m.cursorX--
+				}
 			case "right", "l":
-				m.cursorX++
+				if m.engine.IsValidCoordinate(m.cursorX+1, m.cursorY) {
+					m.cursorX++
+				}
 			case "z":
 				m.engine.PrimaryAction(m.cursorX, m.cursorY)
 			case "x":
@@ -110,5 +142,5 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, tea.Batch(cmds...)
+	return m, nil
 }

@@ -55,6 +55,10 @@ func (c *Cell) RunValidation(result bool) {
 	}
 }
 
+func (c *Cell) View() string {
+	return string(c.value)
+}
+
 func NewCell(x, y int, g *rune) *Cell {
 	cell := &Cell{
 		x:     x,
@@ -62,7 +66,7 @@ func NewCell(x, y int, g *rune) *Cell {
 		state: empty,
 		value: ' ',
 	}
-	if g != nil {
+	if g != nil && *g != '.' {
 		cell.value = *g
 		cell.state = given
 	}

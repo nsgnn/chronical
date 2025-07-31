@@ -2,8 +2,22 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	cellStyle = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder(), true).
+			Padding(0, 1)
+	cursorStyle = cellStyle.
+			Border(lipgloss.ThickBorder(), true)
+	givenStyle = cellStyle.
+			Foreground(lipgloss.Color("242")) // Gray for given cells
+	filledStyle  = cellStyle
+	invalidStyle = cellStyle.
+			BorderForeground(lipgloss.Color("196")) // Red border for invalid
 )
 
 // BaseEngine implements the GameEngine interface.
@@ -20,7 +34,10 @@ type GameEngine interface {
 	PrimaryAction(x, y int) error
 	SecondaryAction(x, y int) error
 	ClearCell(x, y int) error
-	View() string
+	View(cursorX, cursorY int) string
+	Width() int
+	Height() int
+	IsValidCoordinate(x, y int) bool
 }
 
 func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
@@ -49,12 +66,12 @@ func (e *BaseEngine) EvaluateSolution() (bool, error) {
 	return e.Level.Solution == e.Save.State, nil
 }
 
-func (e *BaseEngine) isValidCoordinate(x, y int) bool {
+func (e *BaseEngine) IsValidCoordinate(x, y int) bool {
 	return y < len(e.Grid) && x < len(e.Grid[y]) && y >= 0 && x >= 0
 }
 
 func (e *BaseEngine) PrimaryAction(x, y int) error {
-	if !e.isValidCoordinate(x, y) {
+	if !e.IsValidCoordinate(x, y) {
 		return errors.New("coordinates out of bounds")
 	}
 	e.Grid[y][x].EnterValue('P') // Placeholder
@@ -63,7 +80,7 @@ func (e *BaseEngine) PrimaryAction(x, y int) error {
 }
 
 func (e *BaseEngine) SecondaryAction(x, y int) error {
-	if !e.isValidCoordinate(x, y) { // TODO: extract this logic to a function that accepts (x, y) and returns if it is a valid coordinate.
+	if !e.IsValidCoordinate(x, y) { // TODO: extract this logic to a function that accepts (x, y) and returns if it is a valid coordinate.
 		return errors.New("coordinates out of bounds")
 	}
 	e.Grid[y][x].EnterValue('S') // Placeholder
@@ -72,7 +89,7 @@ func (e *BaseEngine) SecondaryAction(x, y int) error {
 }
 
 func (e *BaseEngine) ClearCell(x, y int) error {
-	if !e.isValidCoordinate(x, y) {
+	if !e.IsValidCoordinate(x, y) {
 		return errors.New("coordinates out of bounds")
 	}
 	e.Grid[y][x].Clear()
@@ -80,8 +97,40 @@ func (e *BaseEngine) ClearCell(x, y int) error {
 	return nil
 }
 
-func (e *BaseEngine) View() string {
-	return fmt.Sprintf("%s\nsolved: %t", e.Save.State, e.Save.Solved)
+func (e *BaseEngine) View(cursorX, cursorY int) string {
+	var rows []string
+	for y, row := range e.Grid {
+		var rowStrings []string
+		for x, cell := range row {
+			var style lipgloss.Style
+			switch cell.state {
+			case given:
+				style = givenStyle
+			case filled:
+				style = filledStyle
+			case invalid:
+				style = invalidStyle
+			default: // empty
+				style = cellStyle
+			}
+
+			if x == cursorX && y == cursorY {
+				style = cursorStyle
+			}
+
+			rowStrings = append(rowStrings, style.Render(cell.View()))
+		}
+		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowStrings...))
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, rows...)
+}
+
+func (e *BaseEngine) Width() int {
+	return e.Level.Width
+}
+
+func (e *BaseEngine) Height() int {
+	return e.Level.Height
 }
 
 func (e *BaseEngine) updateSaveState() {

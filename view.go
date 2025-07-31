@@ -21,18 +21,29 @@ func (m model) View() string {
 		s += "Press 'b' to browse levels.\n"
 		s += "Press 'q' to quit.\n"
 	case browseView:
-		s += "Select a level:\n\n"
-		for i, level := range m.levels {
-			cursor := " "
-			if m.listIndex == i {
-				cursor = ">"
+		if m.levels == nil {
+			s += "Select a level pack:\n\n"
+			for i, lp := range m.levelpacks {
+				if i == m.levelPackIndex {
+					s += fmt.Sprintf("> %s by %s\n", lp.Name, lp.Author)
+				} else {
+					s += fmt.Sprintf("  %s by %s\n", lp.Name, lp.Author)
+				}
 			}
-			s += fmt.Sprintf("%s %s by %s\n", cursor, level.Name, level.Author)
+		} else {
+			s += fmt.Sprintf("Select a level in %s:\n\n", m.levelpacks[m.levelPackIndex].Name)
+			for i, l := range m.levels {
+				if i == m.levelIndex {
+					s += fmt.Sprintf("> %s\n", l.Name)
+				} else {
+					s += fmt.Sprintf("  %s\n", l.Name)
+				}
+			}
 		}
-		s += "\nPress 'enter' to play a level.\n"
-		s += "Press 'esc' to return to the menu.\n"
+
+		s += "\nPress 'esc' to return to the menu.\n"
 	case gameView:
-		s += m.engine.View()
+		s += m.engine.View(m.cursorX, m.cursorY)
 		s += fmt.Sprintf("\n\nCursor: (%d, %d)\n", m.cursorX, m.cursorY)
 		s += "z: primary, x: secondary, backspace: clear\n"
 		s += "arrow keys or hjkl to move\n"
