@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -33,6 +34,7 @@ type model struct {
 	totalLevels    int
 	solvedLevels   int
 	saveIndicators map[int]string
+	viewport       viewport.Model
 }
 
 func NewModel(store *Store) model {
@@ -69,6 +71,14 @@ func (m model) Init() tea.Cmd {
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		headerHeight := 3
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height - headerHeight
+		if m.state == gameView {
+			m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
+		}
+		return m, nil
 	case errMsg:
 		log.Printf("error: %v", msg)
 		return m, tea.Quit
@@ -103,7 +113,7 @@ func (m model) View() string {
 	case browseView:
 		s += m.viewBrowseView()
 	case gameView:
-		s += m.viewGameView()
+		s += m.viewport.View()
 	case exportView:
 		s += m.viewExportView()
 	}
@@ -224,7 +234,7 @@ func (m *model) updateBrowseView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursorX = 0
 			m.cursorY = 0
 			m.levels = nil
-
+			m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
 		}
 	}
 	return m, nil
@@ -262,7 +272,11 @@ func (m model) viewBrowseView() string {
 }
 
 func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg.String() {
+	case "q", "ctrl+c":
+		return m, tea.Quit
 	case "esc":
 		save := m.engine.GetSave()
 		level := m.engine.GetLevel()
@@ -274,6 +288,7 @@ func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		m.state = menuView
+		return m, nil
 	case "up", "k":
 		if m.engine.IsValidCoordinate(m.cursorX, m.cursorY-1) {
 			m.cursorY--
@@ -300,11 +315,10 @@ func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.engine.ClearCell(m.cursorX, m.cursorY)
 		m.engine.EvaluateSolution()
 	}
-	return m, nil
-}
 
-func (m model) viewGameView() string {
-	return m.engine.View(m.cursorX, m.cursorY)
+	m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
+	m.viewport, cmd = m.viewport.Update(msg)
+	return m, cmd
 }
 
 func (m *model) updateExportView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

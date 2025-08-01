@@ -4,11 +4,11 @@ import "errors"
 
 // DebugEngine implements the GameEngine interface for debugging.
 type DebugEngine struct {
-	BaseEngine
+	Engine
 }
 
 func (e *DebugEngine) New(l Level, s *Save) (GameEngine, error) {
-	_, err := e.BaseEngine.New(l, s)
+	_, err := e.Engine.New(l, s)
 	if err != nil {
 		return nil, err
 	}

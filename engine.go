@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// BaseEngine implements the GameEngine interface.
-type BaseEngine struct {
+// Engine implements the GameEngine interface.
+type Engine struct {
 	GameName string
 	Level    Level
 	Save     Save
@@ -31,7 +31,7 @@ type GameEngine interface {
 	GetGameName() string
 }
 
-func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
+func (e *Engine) New(l Level, s *Save) (GameEngine, error) {
 	if s == nil {
 		log.Printf("event=\"EmptyLevelLoad\" level_id=%d", l.ID)
 		s = l.CreateSave(l.Initial, false)
@@ -61,23 +61,23 @@ func (e *BaseEngine) New(l Level, s *Save) (GameEngine, error) {
 	return e, nil
 }
 
-func (e *BaseEngine) EvaluateSolution() (bool, error) {
+func (e *Engine) EvaluateSolution() (bool, error) {
 	return e.Level.Solution == e.Save.State, nil
 }
 
-func (e *BaseEngine) IsValidCoordinate(x, y int) bool {
+func (e *Engine) IsValidCoordinate(x, y int) bool {
 	return y >= 0 && y < len(e.Grid) && x >= 0 && x < len(e.Grid[y])
 }
 
-func (e *BaseEngine) PrimaryAction(x, y int) error {
+func (e *Engine) PrimaryAction(x, y int) error {
 	return errors.New("not implemented")
 }
 
-func (e *BaseEngine) SecondaryAction(x, y int) error {
+func (e *Engine) SecondaryAction(x, y int) error {
 	return errors.New("not implemented")
 }
 
-func (e *BaseEngine) ClearCell(x, y int) error {
+func (e *Engine) ClearCell(x, y int) error {
 	if !e.IsValidCoordinate(x, y) {
 		return errors.New("coordinates out of bounds")
 	}
@@ -86,7 +86,7 @@ func (e *BaseEngine) ClearCell(x, y int) error {
 	return nil
 }
 
-func (e *BaseEngine) View(cursorX, cursorY int) string {
+func (e *Engine) View(cursorX, cursorY int) string {
 	var rows []string
 	for y, row := range e.Grid {
 		var rowStrings []string
@@ -125,15 +125,15 @@ func (e *BaseEngine) View(cursorX, cursorY int) string {
 	return s
 }
 
-func (e *BaseEngine) Width() int {
-	return e.Level.Width
+func (e *Engine) Width() int {
+	return len(e.Grid[0])
 }
 
-func (e *BaseEngine) Height() int {
-	return e.Level.Height
+func (e *Engine) Height() int {
+	return len(e.Grid)
 }
 
-func (e *BaseEngine) updateSaveState() {
+func (e *Engine) updateSaveState() {
 	var builder strings.Builder
 	for y, row := range e.Grid {
 		for _, cell := range row {
@@ -152,14 +152,14 @@ func (e *BaseEngine) updateSaveState() {
 	}
 }
 
-func (e *BaseEngine) GetSave() *Save {
+func (e *Engine) GetSave() *Save {
 	return &e.Save
 }
 
-func (e *BaseEngine) GetLevel() Level {
+func (e *Engine) GetLevel() Level {
 	return e.Level
 }
 
-func (e *BaseEngine) GetGameName() string {
+func (e *Engine) GetGameName() string {
 	return e.GameName
 }

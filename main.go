@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -71,9 +72,61 @@ var importCmd = &cobra.Command{
 	},
 }
 
+var testCmd = &cobra.Command{
+	Use:   "test",
+	Short: "Tools for testing the game.",
+}
+
+var renderCmd = &cobra.Command{
+	Use:   "render",
+	Short: "Render a game state for debugging.",
+	Run: func(cmd *cobra.Command, args []string) {
+		engineName, _ := cmd.Flags().GetString("engine")
+		initialState, _ := cmd.Flags().GetString("initial")
+		saveState, _ := cmd.Flags().GetString("save")
+		initialState = strings.ReplaceAll(initialState, "\\n", "\n")
+		saveState = strings.ReplaceAll(saveState, "\\n", "\n")
+		initialState = strings.TrimSpace(initialState)
+		saveState = strings.TrimSpace(saveState)
+
+		level := Level{
+			ID:       -1,
+			Name:     "Test Render",
+			Engine:   engineName,
+			Initial:  initialState,
+			Solution: saveState,
+		}
+		save := &Save{
+			State: initialState,
+		}
+
+		var engine GameEngine
+		switch engineName {
+		case "nonogram":
+			engine = &NonogramEngine{}
+		default:
+			log.Fatalf("unknown engine: %s", engineName)
+		}
+
+		game, err := engine.New(level, save)
+		if err != nil {
+			log.Fatalf("failed to create game: %v", err)
+		}
+
+		fmt.Println(game.View(0, 0))
+	},
+}
+
 func init() {
+	renderCmd.Flags().String("engine", "nonogram", "The engine to use for rendering.")
+	renderCmd.Flags().String("initial", "", "The initial state of the grid.")
+	renderCmd.Flags().String("save", "", "The save state of the grid.")
+
+	testCmd.AddCommand(renderCmd)
+
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(testCmd)
 }
 
 func main() {

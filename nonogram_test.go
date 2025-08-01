@@ -80,7 +80,7 @@ func TestNonogramEngine(t *testing.T) {
 		{
 			name: "Evaluate Correct Solution",
 			action: func(e *NonogramEngine) {
-				e.Save.State = "1111\n1111\n1111\n1111"
+				e.Engine.Save.State = "1111\n1111\n1111\n1111"
 				solved, err := e.EvaluateSolution()
 				if err != nil {
 					t.Errorf("unexpected error: %v", err)
@@ -109,8 +109,8 @@ func TestNonogramEngine(t *testing.T) {
 				tc.action(engine)
 			}
 
-			if engine.Save.State != tc.expectedState {
-				t.Errorf("expected state %q, got %q", tc.expectedState, engine.Save.State)
+			if engine.Engine.Save.State != tc.expectedState {
+				t.Errorf("expected state %q, got %q", tc.expectedState, engine.Engine.Save.State)
 			}
 
 			if tc.expectedLog != "" {
