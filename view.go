@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	titleStyle   = lipgloss.NewStyle().Background(lipgloss.Color("130")).Padding(0, 1)
-	subtleStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
+	titleStyle      = lipgloss.NewStyle().Background(lipgloss.Color("130")).Padding(0, 1)
+	subtleStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	focusedStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	tableTitleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("145"))
+	blurredStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
 
 	cellStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder(), true).
@@ -28,7 +29,7 @@ var (
 func (m model) View() string {
 	var title string
 	if m.engine != nil {
-		title = fmt.Sprintf("%s - %s", m.engine.GetGameName(), m.engine.GetLevel().Name)
+		title = fmt.Sprintf("%s - %s by %s", m.engine.GetGameName(), m.engine.GetLevel().Name, m.engine.GetLevel().Author)
 	} else {
 		title = "Nona Engine"
 	}
@@ -79,6 +80,7 @@ func (m model) View() string {
 			}
 		} else {
 			s += fmt.Sprintf("Select a level in %s:\n\n", m.levelpacks[m.levelPackIndex].Name)
+			s += tableTitleStyle.Render(fmt.Sprintf("  %-24s\t(%s)\t%s", "Level Name", "Game Mode", "Save")) + "\n"
 			for i, l := range m.levels {
 				save, err := m.store.GetSave(l.ID)
 				if err != nil {
@@ -94,7 +96,7 @@ func (m model) View() string {
 					}
 				}
 
-				line := fmt.Sprintf("  %s\t(%s)\t%s", l.Name, l.Engine, saveIndicator)
+				line := fmt.Sprintf("  %-24s\t(%s)\t%s", l.Name, l.Engine, saveIndicator)
 				if i == m.levelIndex {
 					line = ">" + line[1:]
 					s += focusedStyle.Render(line) + "\n"
@@ -107,6 +109,17 @@ func (m model) View() string {
 		s += "\n" + subtleStyle.Render("Press 'esc' to return to the menu.") + "\n"
 	case gameView:
 		s += m.engine.View(m.cursorX, m.cursorY)
+	case exportView:
+		s += "Select a level pack to export:\n\n"
+		for i, lp := range m.levelpacks {
+			if i == m.levelPackIndex {
+				s += focusedStyle.Render(fmt.Sprintf("> %s by %s", lp.Name, lp.Author)) + "\n"
+			} else {
+				s += blurredStyle.Render(fmt.Sprintf("  %s by %s", lp.Name, lp.Author)) + "\n"
+			}
+		}
+		s += "\n" + subtleStyle.Render("Press 'enter' to export the selected level pack.") + "\n"
+		s += subtleStyle.Render("Press 'esc' to return to the menu.") + "\n"
 	}
 
 	return s

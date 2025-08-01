@@ -10,6 +10,7 @@ const (
 	menuView uint = iota
 	browseView
 	gameView
+	exportView
 )
 
 type model struct {
@@ -58,6 +59,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			case "b":
 				m.state = browseView
+			case "e":
+				m.state = exportView
 			}
 		case browseView:
 			switch key {
@@ -165,6 +168,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.engine.SecondaryAction(m.cursorX, m.cursorY)
 			case "backspace":
 				m.engine.ClearCell(m.cursorX, m.cursorY)
+			}
+		case exportView:
+			switch key {
+			case "q", "ctrl+c", "esc":
+				m.state = menuView
+			case "up", "k":
+				if m.levelPackIndex > 0 {
+					m.levelPackIndex--
+				}
+			case "down", "j":
+				if m.levelPackIndex < len(m.levelpacks)-1 {
+					m.levelPackIndex++
+				}
+			case "enter":
+				selectedPack := m.levelpacks[m.levelPackIndex]
+				m.store.ExportLevelPack(selectedPack.ID, selectedPack.Name+".yaml")
+				return m, tea.Quit
 			}
 		}
 	}

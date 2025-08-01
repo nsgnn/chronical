@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -36,25 +35,21 @@ var rootCmd = &cobra.Command{
 }
 
 var exportCmd = &cobra.Command{
-	Use:   "export [levelPackID] [path]",
+	Use:   "export",
 	Short: "Export a level pack to a YAML file.",
-	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		store, err := NewStore("nona.db")
 		if err != nil {
 			log.Fatalf("unable to init store: %v", err)
 		}
 
-		levelPackID, err := strconv.Atoi(args[0])
-		if err != nil {
-			log.Fatalf("invalid level pack ID: %v", err)
-		}
+		m := NewModel(store)
+		m.state = exportView
 
-		if err := store.ExportLevelPack(levelPackID, args[1]); err != nil {
-			log.Fatalf("unable to export level pack: %v", err)
+		p := tea.NewProgram(m)
+		if _, err := p.Run(); err != nil {
+			log.Fatalf("event=\"tui_failed\" err=\"%v\"", err)
 		}
-
-		fmt.Printf("Level pack %d exported to %s\n", levelPackID, args[1])
 	},
 }
 
