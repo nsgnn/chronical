@@ -290,30 +290,30 @@ func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.state = menuView
 		return m, nil
 	case "up", "k":
-		if m.engine.IsValidCoordinate(m.cursorX, m.cursorY-1) {
+		if m.engine.HasCell(m.cursorX, m.cursorY-1) {
 			m.cursorY--
 		}
 	case "down", "j":
-		if m.engine.IsValidCoordinate(m.cursorX, m.cursorY+1) {
+		if m.engine.HasCell(m.cursorX, m.cursorY+1) {
 			m.cursorY++
 		}
 	case "left", "h":
-		if m.engine.IsValidCoordinate(m.cursorX-1, m.cursorY) {
+		if m.engine.HasCell(m.cursorX-1, m.cursorY) {
 			m.cursorX--
 		}
 	case "right", "l":
-		if m.engine.IsValidCoordinate(m.cursorX+1, m.cursorY) {
+		if m.engine.HasCell(m.cursorX+1, m.cursorY) {
 			m.cursorX++
 		}
 	case "z":
 		m.engine.PrimaryAction(m.cursorX, m.cursorY)
-		m.engine.EvaluateSolution()
+		m.engine.Evaluate()
 	case "x":
 		m.engine.SecondaryAction(m.cursorX, m.cursorY)
-		m.engine.EvaluateSolution()
+		m.engine.Evaluate()
 	case "backspace":
 		m.engine.ClearCell(m.cursorX, m.cursorY)
-		m.engine.EvaluateSolution()
+		m.engine.Evaluate()
 	}
 
 	m.viewport.SetContent(m.engine.View(*m))

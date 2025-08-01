@@ -4,9 +4,24 @@ import (
 	"errors"
 	"log"
 	"strings"
-
-	"github.com/charmbracelet/lipgloss"
 )
+
+// GameEngine defines the interface for a game engine.
+type GameEngine interface {
+	New(l Level, s *Save) (GameEngine, error)
+	Evaluate() (bool, error)
+	PrimaryAction(x, y int) error
+	SecondaryAction(x, y int) error
+	setCellValue(x, y int, value rune) error
+	ClearCell(x, y int) error
+	View(m model) string
+	GetWidth() int
+	GetHeight() int
+	HasCell(x, y int) bool
+	GetSave() *Save
+	GetLevel() Level
+	GetGameName() string
+}
 
 // Engine implements the GameEngine interface.
 type Engine struct {
@@ -14,22 +29,6 @@ type Engine struct {
 	Level    Level
 	Save     Save
 	Grid     [][]Cell
-}
-
-type GameEngine interface {
-	New(l Level, s *Save) (GameEngine, error)
-	EvaluateSolution() (bool, error)
-	PrimaryAction(x, y int) error
-	SecondaryAction(x, y int) error
-	SetCellValue(x, y int, value rune) error
-	ClearCell(x, y int) error
-	View(m model) string
-	Width() int
-	Height() int
-	IsValidCoordinate(x, y int) bool
-	GetSave() *Save
-	GetLevel() Level
-	GetGameName() string
 }
 
 func (e *Engine) New(l Level, s *Save) (GameEngine, error) {
@@ -40,15 +39,15 @@ func (e *Engine) New(l Level, s *Save) (GameEngine, error) {
 		log.Printf("event=\"StatefulLevelLoad\" level_id=%d state=\"%v\"", l.ID, s.State)
 	}
 
-	initialLines := strings.Split(l.Initial, "\n")
-	savedLines := strings.Split(s.State, "\n")
+	iRows := strings.Split(l.Initial, "\n")
+	sRow := strings.Split(s.State, "\n")
 
-	grid := make([][]Cell, len(initialLines))
-	for y, row := range initialLines {
+	grid := make([][]Cell, len(iRows))
+	for y, row := range iRows {
 		grid[y] = make([]Cell, len(row))
 		for x, initialChar := range row {
 			var cell *Cell
-			savedCharRune := rune(savedLines[y][x])
+			savedCharRune := rune(sRow[y][x])
 			cell = NewCell(y, x, &initialChar, &savedCharRune)
 
 			grid[y][x] = *cell
@@ -62,21 +61,8 @@ func (e *Engine) New(l Level, s *Save) (GameEngine, error) {
 	return e, nil
 }
 
-func (e *Engine) EvaluateSolution() (bool, error) {
+func (e *Engine) Evaluate() (bool, error) {
 	return e.Level.Solution == e.Save.State, nil
-}
-
-func (e *Engine) IsValidCoordinate(x, y int) bool {
-	return y >= 0 && y < len(e.Grid) && x >= 0 && x < len(e.Grid[y])
-}
-
-func (e *Engine) SetCellValue(x, y int, value rune) error {
-	if !e.IsValidCoordinate(x, y) {
-		return errors.New("coordinates out of bounds")
-	}
-	e.Grid[y][x].EnterValue(value)
-	e.updateSaveState()
-	return nil
 }
 
 func (e *Engine) PrimaryAction(x, y int) error {
@@ -88,7 +74,7 @@ func (e *Engine) SecondaryAction(x, y int) error {
 }
 
 func (e *Engine) ClearCell(x, y int) error {
-	if !e.IsValidCoordinate(x, y) {
+	if !e.HasCell(x, y) {
 		return errors.New("coordinates out of bounds")
 	}
 	e.Grid[y][x].Clear()
@@ -97,50 +83,40 @@ func (e *Engine) ClearCell(x, y int) error {
 }
 
 func (e *Engine) View(m model) string {
-	var rows []string
-	for y, row := range e.Grid {
-		var rowStrings []string
-		for x, cell := range row {
-			var style lipgloss.Style
-			switch cell.state {
-			case given:
-				style = givenStyle
-			case filled:
-				style = filledStyle
-			case invalid:
-				style = invalidStyle
-			default: // empty
-				style = cellStyle
-			}
-
-			if x == m.cursorX && y == m.cursorY {
-				style = cursorStyle
-			}
-
-			rowStrings = append(rowStrings, style.Render(cell.View()))
-		}
-		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowStrings...))
-	}
-	s := lipgloss.JoinVertical(lipgloss.Left, rows...)
-	if e.Grid[m.cursorY][m.cursorX].state != given {
-		s += "\nz: primary, x: secondary, backspace: clear\n"
-	} else {
-		s += "\n\n"
-	}
-	s += "arrow keys or hjkl to move\n"
-	s += "Press 'esc' to return to the menu.\n"
-	if e.Save.Solved {
-		s += "Congrats!\n"
-	}
-	return s
+	return ""
 }
 
-func (e *Engine) Width() int {
+func (e *Engine) GetWidth() int {
 	return len(e.Grid[0])
 }
 
-func (e *Engine) Height() int {
+func (e *Engine) GetHeight() int {
 	return len(e.Grid)
+}
+
+func (e *Engine) HasCell(x, y int) bool {
+	return y >= 0 && y < len(e.Grid) && x >= 0 && x < len(e.Grid[y])
+}
+
+func (e *Engine) GetSave() *Save {
+	return &e.Save
+}
+
+func (e *Engine) GetLevel() Level {
+	return e.Level
+}
+
+func (e *Engine) GetGameName() string {
+	return e.GameName
+}
+
+func (e *Engine) setCellValue(x, y int, value rune) error {
+	if !e.HasCell(x, y) {
+		return errors.New("coordinates out of bounds")
+	}
+	e.Grid[y][x].EnterValue(value)
+	e.updateSaveState()
+	return nil
 }
 
 func (e *Engine) updateSaveState() {
@@ -154,22 +130,10 @@ func (e *Engine) updateSaveState() {
 		}
 	}
 	e.Save.State = builder.String()
-	solved, err := e.EvaluateSolution()
+	solved, err := e.Evaluate()
 	if err != nil {
 		e.Save.Solved = false
 	} else {
 		e.Save.Solved = solved
 	}
-}
-
-func (e *Engine) GetSave() *Save {
-	return &e.Save
-}
-
-func (e *Engine) GetLevel() Level {
-	return e.Level
-}
-
-func (e *Engine) GetGameName() string {
-	return e.GameName
 }
