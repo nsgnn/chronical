@@ -1,3 +1,19 @@
+// This file implements the Nonogram game logic.
+//
+// Nonogram is a picture logic puzzle in which cells in a grid must be
+// colored or left blank according to numbers at the side of the grid to
+// reveal a hidden picture. In this puzzle type, the numbers are a form of
+// discrete tomography that measures how many unbroken lines of filled-in
+// squares there are in any given row or column.
+//
+// For example, a clue of "4 8 3" would mean there are sets of four, eight,
+// and three filled squares, in that order, with at least one blank square
+// between successive sets.
+//
+// The primary action will color a cell with the FilledTile rune.
+// The secondary action will mark a cell as a known empty tile with the KnownEmptyTile rune.
+// The puzzle is evaluated as a solve if the save and solution tomography matches for both rows and columns.
+// TODO: Modify nonogram_test.go to test exclusively the private functions. We rely on Engine to test it's functionality.
 package main
 
 import (
@@ -30,65 +46,6 @@ func (e *NonogramEngine) New(l Level, s *Save) (GameEngine, error) {
 	return e, nil
 }
 
-func (e *NonogramEngine) generateTomography(state string) ([][]int, [][]int) {
-	s := strings.Split(state, "\n")
-	h := len(s)
-	w := 0
-	if h > 0 {
-		w = len(s[0])
-	}
-
-	rowHints := make([][]int, h)
-	for y := range h {
-		c := 0
-		var rowHint []int
-		for x := 0; x < w; x++ {
-			r := rune(s[y][x])
-			if r == FilledTile {
-				c++
-			} else {
-				if c > 0 {
-					rowHint = append(rowHint, c)
-				}
-				c = 0
-			}
-		}
-		if c > 0 {
-			rowHint = append(rowHint, c)
-		}
-		if len(rowHint) == 0 {
-			rowHint = append(rowHint, 0)
-		}
-		rowHints[y] = rowHint
-	}
-
-	colHints := make([][]int, w)
-	for x := 0; x < w; x++ {
-		c := 0
-		var colHint []int
-		for y := range h {
-			r := rune(s[y][x])
-			if r == FilledTile {
-				c++
-			} else {
-				if c > 0 {
-					colHint = append(colHint, c)
-				}
-				c = 0
-			}
-		}
-		if c > 0 {
-			colHint = append(colHint, c)
-		}
-		if len(colHint) == 0 {
-			colHint = append(colHint, 0)
-		}
-		colHints[x] = colHint
-	}
-
-	return rowHints, colHints
-}
-
 func (e *NonogramEngine) PrimaryAction(x, y int) error {
 	return e.SetCellValue(x, y, FilledTile)
 }
@@ -104,25 +61,8 @@ func (e *NonogramEngine) EvaluateSolution() (bool, error) {
 	return result, nil
 }
 
-func cmpTomo(a [][]int, b [][]int) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, r := range a {
-		if len(r) != len(b[i]) {
-			return false
-		}
-		for j, v := range r {
-			if v != b[i][j] {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func (e *NonogramEngine) View(m model) string {
-
+	//TODO: move the map definitions to the top of the file. They are associated with our definitions of FilledTile, KnownEmptyTile, and EmptyTile
 	styleMap := map[rune]lipgloss.Style{
 		FilledTile:     lipgloss.NewStyle().Background(lipgloss.Color("255")), // White background
 		KnownEmptyTile: lipgloss.NewStyle().Foreground(lipgloss.Color("245")), // Light grey foreground
@@ -229,4 +169,85 @@ func (e *NonogramEngine) View(m model) string {
 	}
 
 	return finalView + help
+}
+
+// --- Private Functions ---
+
+// generateTomography creates row and column hints from a solution (state) string.
+// These hints are the numbers that are displayed on the sides of the grid.
+func (e *NonogramEngine) generateTomography(state string) ([][]int, [][]int) {
+	s := strings.Split(state, "\n")
+	h := len(s)
+	w := 0
+	if h > 0 {
+		w = len(s[0])
+	}
+
+	rowHints := make([][]int, h)
+	for y := range h {
+		c := 0
+		var rowHint []int
+		for x := 0; x < w; x++ {
+			r := rune(s[y][x])
+			if r == FilledTile {
+				c++
+			} else {
+				if c > 0 {
+					rowHint = append(rowHint, c)
+				}
+				c = 0
+			}
+		}
+		if c > 0 {
+			rowHint = append(rowHint, c)
+		}
+		if len(rowHint) == 0 {
+			rowHint = append(rowHint, 0)
+		}
+		rowHints[y] = rowHint
+	}
+
+	colHints := make([][]int, w)
+	for x := 0; x < w; x++ {
+		c := 0
+		var colHint []int
+		for y := range h {
+			r := rune(s[y][x])
+			if r == FilledTile {
+				c++
+			} else {
+				if c > 0 {
+					colHint = append(colHint, c)
+				}
+				c = 0
+			}
+		}
+		if c > 0 {
+			colHint = append(colHint, c)
+		}
+		if len(colHint) == 0 {
+			colHint = append(colHint, 0)
+		}
+		colHints[x] = colHint
+	}
+
+	return rowHints, colHints
+}
+
+// cmpTomo compares two sets of tomography hints for equality.
+func cmpTomo(a [][]int, b [][]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, r := range a {
+		if len(r) != len(b[i]) {
+			return false
+		}
+		for j, v := range r {
+			if v != b[i][j] {
+				return false
+			}
+		}
+	}
+	return true
 }
