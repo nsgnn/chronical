@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 
 		m := NewModel(store)
 
-		p := tea.NewProgram(m)
+		p := tea.NewProgram(&m)
 		if _, err := p.Run(); err != nil {
 			log.Fatalf("event=\"tui_failed\" err=\"%v\"", err)
 		}
@@ -46,7 +46,7 @@ var exportCmd = &cobra.Command{
 		m := NewModel(store)
 		m.state = exportView
 
-		p := tea.NewProgram(m)
+		p := tea.NewProgram(&m)
 		if _, err := p.Run(); err != nil {
 			log.Fatalf("event=\"tui_failed\" err=\"%v\"", err)
 		}

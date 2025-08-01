@@ -2,10 +2,25 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func sqlIn(query string, args []int) (string, []interface{}, error) {
+	if len(args) == 0 {
+		return "", nil, fmt.Errorf("no arguments provided for IN clause")
+	}
+	placeholders := strings.Repeat("?,", len(args)-1) + "?"
+	query = strings.Replace(query, "?", placeholders, 1)
+	iargs := make([]interface{}, len(args))
+	for i, v := range args {
+		iargs[i] = v
+	}
+	return query, iargs, nil
+}
 
 // Store handles all database operations.
 type Store struct {
@@ -271,6 +286,44 @@ func (s *Store) CountLevels() (int, error) {
 	}
 	log.Printf("event=\"counted_levels\" count=%d", count)
 	return count, nil
+}
+
+// GetSaveIndicators retrieves the save status for a list of level IDs.
+func (s *Store) GetSaveIndicators(levelIDs []int) (map[int]string, error) {
+	indicators := make(map[int]string)
+	for _, id := range levelIDs {
+		indicators[id] = " "
+	}
+
+	if len(levelIDs) == 0 {
+		return indicators, nil
+	}
+
+	query, args, err := sqlIn("SELECT level_id, solved FROM saves WHERE level_id IN (?)", levelIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var levelID int
+		var solved bool
+		if err := rows.Scan(&levelID, &solved); err != nil {
+			return nil, err
+		}
+		if solved {
+			indicators[levelID] = "*"
+		} else {
+			indicators[levelID] = "-"
+		}
+	}
+
+	return indicators, nil
 }
 
 // CountSolvedLevels counts the number of solved levels.
