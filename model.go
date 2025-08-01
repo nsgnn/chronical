@@ -27,6 +27,11 @@ type model struct {
 	levels         []Level
 	levelPackIndex int
 	levelIndex     int
+
+	// stats
+	loadedPacks  int
+	totalLevels  int
+	solvedLevels int
 }
 
 func NewModel(store *Store) model {
@@ -36,11 +41,24 @@ func NewModel(store *Store) model {
 		panic(err)
 	}
 
+	loadedPacks := len(levelpacks)
+	totalLevels, err := store.CountLevels()
+	if err != nil {
+		log.Printf("could not count levels %v", err)
+	}
+	solvedLevels, err := store.CountSolvedLevels()
+	if err != nil {
+		log.Printf("could not count solved levels %v", err)
+	}
+
 	return model{
-		store:      store,
-		state:      menuView,
-		engine:     nil,
-		levelpacks: levelpacks,
+		store:        store,
+		state:        menuView,
+		engine:       nil,
+		levelpacks:   levelpacks,
+		loadedPacks:  loadedPacks,
+		totalLevels:  totalLevels,
+		solvedLevels: solvedLevels,
 	}
 }
 

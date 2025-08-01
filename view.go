@@ -38,19 +38,9 @@ func (m model) View() string {
 
 	switch m.state {
 	case menuView:
-		loadedPacks := len(m.levelpacks)
-		totalLevels, err := m.store.CountLevels()
-		if err != nil {
-			log.Printf("could not count levels %v", err)
-		}
-		solvedLevels, err := m.store.CountSolvedLevels()
-		if err != nil {
-			log.Printf("could not count solved levels %v", err)
-		}
-
 		var solvedPercentage float64
-		if totalLevels > 0 {
-			solvedPercentage = (float64(solvedLevels) / float64(totalLevels)) * 100
+		if m.totalLevels > 0 {
+			solvedPercentage = (float64(m.solvedLevels) / float64(m.totalLevels)) * 100
 		}
 
 		stats := lipgloss.NewStyle().
@@ -58,10 +48,10 @@ func (m model) View() string {
 			Padding(1, 2).
 			Render(fmt.Sprintf(
 				"Loaded Packs: %d\nTotal Levels: %d\nSolved: %d/%d (%.2f%%)",
-				loadedPacks,
-				totalLevels,
-				solvedLevels,
-				totalLevels,
+				m.loadedPacks,
+				m.totalLevels,
+				m.solvedLevels,
+				m.totalLevels,
 				solvedPercentage,
 			))
 
