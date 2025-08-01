@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,13 +10,13 @@ import (
 const (
 	FilledTile     = rune('1')
 	KnownEmptyTile = rune('X')
+	EmptyTile      = rune(' ')
 )
 
-// NonogramEngine implements the GameEngine interface for nonogram puzzles.
 type NonogramEngine struct {
 	Engine
-	RowHints [][]int
-	ColHints [][]int
+	solutionRowTomography    [][]int
+	solutionColumnTomography [][]int
 }
 
 func (e *NonogramEngine) New(l Level, s *Save) (GameEngine, error) {
@@ -26,175 +25,147 @@ func (e *NonogramEngine) New(l Level, s *Save) (GameEngine, error) {
 		return nil, err
 	}
 
-	e.RowHints, e.ColHints = e.generateHints(l.Solution)
+	e.solutionRowTomography, e.solutionColumnTomography = e.generateTomography(l.Solution)
 
 	return e, nil
 }
 
-// generateHints parses the solution string and returns the row and column hints.
-func (e *NonogramEngine) generateHints(solution string) ([][]int, [][]int) {
-	lines := strings.Split(solution, "\n")
-	height := len(lines)
-	width := 0
-	if height > 0 {
-		width = len(lines[0])
+func (e *NonogramEngine) generateTomography(state string) ([][]int, [][]int) {
+	s := strings.Split(state, "\n")
+	h := len(s)
+	w := 0
+	if h > 0 {
+		w = len(s[0])
 	}
 
-	rowHints := make([][]int, height)
-	for y := range height {
-		count := 0
-		var hints []int
-		for x := 0; x < width; x++ {
-			if rune(lines[y][x]) == FilledTile {
-				count++
+	rowHints := make([][]int, h)
+	for y := range h {
+		c := 0
+		var rowHint []int
+		for x := 0; x < w; x++ {
+			r := rune(s[y][x])
+			if r == FilledTile {
+				c++
 			} else {
-				if count > 0 {
-					hints = append(hints, count)
+				if c > 0 {
+					rowHint = append(rowHint, c)
 				}
-				count = 0
+				c = 0
 			}
 		}
-		if count > 0 {
-			hints = append(hints, count)
+		if c > 0 {
+			rowHint = append(rowHint, c)
 		}
-		if len(hints) == 0 {
-			hints = append(hints, 0)
+		if len(rowHint) == 0 {
+			rowHint = append(rowHint, 0)
 		}
-		rowHints[y] = hints
+		rowHints[y] = rowHint
 	}
 
-	colHints := make([][]int, width)
-	for x := 0; x < width; x++ {
-		count := 0
-		var hints []int
-		for y := range height {
-			if rune(lines[y][x]) == FilledTile {
-				count++
+	colHints := make([][]int, w)
+	for x := 0; x < w; x++ {
+		c := 0
+		var colHint []int
+		for y := range h {
+			r := rune(s[y][x])
+			if r == FilledTile {
+				c++
 			} else {
-				if count > 0 {
-					hints = append(hints, count)
+				if c > 0 {
+					colHint = append(colHint, c)
 				}
-				count = 0
+				c = 0
 			}
 		}
-		if count > 0 {
-			hints = append(hints, count)
+		if c > 0 {
+			colHint = append(colHint, c)
 		}
-		if len(hints) == 0 {
-			hints = append(hints, 0)
+		if len(colHint) == 0 {
+			colHint = append(colHint, 0)
 		}
-		colHints[x] = hints
+		colHints[x] = colHint
 	}
 
 	return rowHints, colHints
 }
 
 func (e *NonogramEngine) PrimaryAction(x, y int) error {
-	if !e.IsValidCoordinate(x, y) {
-		return errors.New("coordinates out of bounds")
-	}
-	e.Grid[y][x].EnterValue(FilledTile)
-	e.updateSaveState()
-	return nil
+	return e.SetCellValue(x, y, FilledTile)
 }
 
 func (e *NonogramEngine) SecondaryAction(x, y int) error {
-	if !e.IsValidCoordinate(x, y) {
-		return errors.New("coordinates out of bounds")
-	}
-	e.Grid[y][x].EnterValue(KnownEmptyTile)
-	e.updateSaveState()
-	return nil
+	return e.SetCellValue(x, y, KnownEmptyTile)
 }
 
 func (e *NonogramEngine) EvaluateSolution() (bool, error) {
-	sanitized_known_empty_save := strings.ReplaceAll(e.Save.State, string(KnownEmptyTile), " ")
-	currentRows, currentCol := e.generateHints(sanitized_known_empty_save)
+	saveRowTomo, saveColTomo := e.generateTomography(e.Save.State)
 
-	// Compare row hints
-	if len(currentRows) != len(e.RowHints) {
-		return false, nil
-	}
-	for i, row := range currentRows {
-		if len(row) != len(e.RowHints[i]) {
-			return false, nil
-		}
-		for j, val := range row {
-			if val != e.RowHints[i][j] {
-				return false, nil
-			}
-		}
-	}
-
-	// Compare column hints
-	if len(currentCol) != len(e.ColHints) {
-		return false, nil
-	}
-	for i, col := range currentCol {
-		if len(col) != len(e.ColHints[i]) {
-			return false, nil
-		}
-		for j, val := range col {
-			if val != e.ColHints[i][j] {
-				return false, nil
-			}
-		}
-	}
-
-	return true, nil
+	result := cmpTomo(saveRowTomo, e.solutionRowTomography) && cmpTomo(saveColTomo, e.solutionColumnTomography)
+	return result, nil
 }
 
-func (e *NonogramEngine) View(cursorX, cursorY int) string {
-	// --- Styles ---
-	styleFilled := lipgloss.NewStyle().Background(lipgloss.Color("255"))     // White background
-	styleKnownEmpty := lipgloss.NewStyle().Foreground(lipgloss.Color("245")) // Light grey foreground
-	styleEmpty := lipgloss.NewStyle().Foreground(lipgloss.Color("250"))      // Dim grey foreground
-	styleCursor := lipgloss.NewStyle().Background(lipgloss.Color("205"))     // Magenta background for the cursor
+func cmpTomo(a [][]int, b [][]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, r := range a {
+		if len(r) != len(b[i]) {
+			return false
+		}
+		for j, v := range r {
+			if v != b[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
 
-	// --- Characters ---
-	charFilled := " "
-	charKnownEmpty := "X"
-	charEmpty := "·"
+func (e *NonogramEngine) View(m model) string {
 
+	styleMap := map[rune]lipgloss.Style{
+		FilledTile:     lipgloss.NewStyle().Background(lipgloss.Color("255")), // White background
+		KnownEmptyTile: lipgloss.NewStyle().Foreground(lipgloss.Color("245")), // Light grey foreground
+		EmptyTile:      lipgloss.NewStyle().Foreground(lipgloss.Color("250")), // Dim grey foreground
+	}
+	cursorStyle := lipgloss.NewStyle().Background(lipgloss.Color("205")) // Magenta background for the cursor
+	hintStyle := lipgloss.NewStyle()
+	charMap := map[rune]string{
+		FilledTile:     " ",
+		KnownEmptyTile: "X",
+		EmptyTile:      "·",
+	}
 	// Each grid cell is two characters wide for better proportions.
 	cellWidth := 2
 
 	// --- Grid Rendering ---
-	var gridRows []string
+	var rows []string
 	for y, row := range e.Grid {
-		var rowCells []string
+		var rowBuider []string
 		for x, cell := range row {
-			var style lipgloss.Style
-			var char string
-
-			switch cell.value {
-			case FilledTile:
-				style = styleFilled
-				char = charFilled
-			case KnownEmptyTile:
-				style = styleKnownEmpty
-				char = charKnownEmpty
-			default:
-				style = styleEmpty
-				char = charEmpty
+			renderStyle, ok := styleMap[cell.value]
+			if !ok {
+				renderStyle = styleMap[EmptyTile]
+			}
+			renderRune, ok := charMap[cell.value]
+			if !ok {
+				renderRune = charMap[EmptyTile]
 			}
 
-			// Pad character to cellWidth
-			paddedChar := lipgloss.NewStyle().Width(cellWidth).Render(char)
-
-			if x == cursorX && y == cursorY {
-				rowCells = append(rowCells, styleCursor.Render(paddedChar))
-			} else {
-				rowCells = append(rowCells, style.Render(paddedChar))
+			if x == m.cursorX && y == m.cursorY {
+				renderStyle = cursorStyle
 			}
+			rowBuider = append(rowBuider, renderStyle.Width(cellWidth).Render(renderRune))
+
 		}
-		gridRows = append(gridRows, lipgloss.JoinHorizontal(lipgloss.Top, rowCells...))
+		row := lipgloss.JoinHorizontal(lipgloss.Top, rowBuider...)
+		rows = append(rows, row)
 	}
-	gridView := lipgloss.JoinVertical(lipgloss.Left, gridRows...)
+	grid := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
 	// --- Row Hints Rendering ---
 	maxRowHintsLen := 0
-	for _, hints := range e.RowHints {
+	for _, hints := range e.solutionRowTomography {
 		if len(hints) > maxRowHintsLen {
 			maxRowHintsLen = len(hints)
 		}
@@ -203,19 +174,19 @@ func (e *NonogramEngine) View(cursorX, cursorY int) string {
 	rowHintsWidth := maxRowHintsLen * 3
 
 	var rowHintViews []string
-	for _, hints := range e.RowHints {
+	for _, hints := range e.solutionRowTomography {
 		var hintStrings []string
 		for _, h := range hints {
 			hintStrings = append(hintStrings, fmt.Sprintf("%2d", h))
 		}
 		s := strings.Join(hintStrings, " ")
-		rowHintViews = append(rowHintViews, lipgloss.NewStyle().Width(rowHintsWidth).Align(lipgloss.Right).Render(s))
+		rowHintViews = append(rowHintViews, hintStyle.Width(rowHintsWidth).Align(lipgloss.Right).Render(s))
 	}
 	rowHintsView := lipgloss.JoinVertical(lipgloss.Left, rowHintViews...)
 
 	// --- Column Hints Rendering ---
 	maxColHintsLen := 0
-	for _, hints := range e.ColHints {
+	for _, hints := range e.solutionColumnTomography {
 		if len(hints) > maxColHintsLen {
 			maxColHintsLen = len(hints)
 		}
@@ -224,7 +195,7 @@ func (e *NonogramEngine) View(cursorX, cursorY int) string {
 	var colHintStrs []string
 	for i := 0; i < maxColHintsLen; i++ {
 		var row []string
-		for _, hints := range e.ColHints {
+		for _, hints := range e.solutionColumnTomography {
 			hintIdx := len(hints) - maxColHintsLen + i
 			var hintStr string
 			if hintIdx >= 0 {
@@ -232,21 +203,21 @@ func (e *NonogramEngine) View(cursorX, cursorY int) string {
 			} else {
 				hintStr = " "
 			}
-			row = append(row, lipgloss.NewStyle().Width(cellWidth).Align(lipgloss.Center).Render(hintStr))
+			row = append(row, hintStyle.Width(cellWidth).Align(lipgloss.Center).Render(hintStr))
 		}
 		colHintStrs = append(colHintStrs, lipgloss.JoinHorizontal(lipgloss.Top, row...))
 	}
 	colHintsView := lipgloss.JoinVertical(lipgloss.Left, colHintStrs...)
 
 	// --- Assembly ---
-	spacer := lipgloss.NewStyle().Width(rowHintsWidth).Height(maxColHintsLen).Render("")
+	spacer := hintStyle.Width(rowHintsWidth).Height(maxColHintsLen).Render("")
 	topView := lipgloss.JoinHorizontal(lipgloss.Bottom, spacer, colHintsView)
-	mainView := lipgloss.JoinHorizontal(lipgloss.Top, rowHintsView, gridView)
+	mainView := lipgloss.JoinHorizontal(lipgloss.Top, rowHintsView, grid)
 	finalView := lipgloss.JoinVertical(lipgloss.Left, topView, mainView)
 
 	// --- Help Text ---
 	help := "\n"
-	if e.Grid[cursorY][cursorX].state != given {
+	if e.Grid[m.cursorY][m.cursorX].state != given {
 		help += "z: Toggle, x: Flag, backspace: clear\n"
 	} else {
 		help += "\n"

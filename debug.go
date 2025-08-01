@@ -32,3 +32,8 @@ func (e *DebugEngine) SecondaryAction(x, y int) error {
 	e.updateSaveState()
 	return nil
 }
+
+func (e *DebugEngine) View(m model) string {
+	return e.Engine.View(m)
+}
+

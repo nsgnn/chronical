@@ -21,8 +21,9 @@ type GameEngine interface {
 	EvaluateSolution() (bool, error)
 	PrimaryAction(x, y int) error
 	SecondaryAction(x, y int) error
+	SetCellValue(x, y int, value rune) error
 	ClearCell(x, y int) error
-	View(cursorX, cursorY int) string
+	View(m model) string
 	Width() int
 	Height() int
 	IsValidCoordinate(x, y int) bool
@@ -69,6 +70,15 @@ func (e *Engine) IsValidCoordinate(x, y int) bool {
 	return y >= 0 && y < len(e.Grid) && x >= 0 && x < len(e.Grid[y])
 }
 
+func (e *Engine) SetCellValue(x, y int, value rune) error {
+	if !e.IsValidCoordinate(x, y) {
+		return errors.New("coordinates out of bounds")
+	}
+	e.Grid[y][x].EnterValue(value)
+	e.updateSaveState()
+	return nil
+}
+
 func (e *Engine) PrimaryAction(x, y int) error {
 	return errors.New("not implemented")
 }
@@ -86,7 +96,7 @@ func (e *Engine) ClearCell(x, y int) error {
 	return nil
 }
 
-func (e *Engine) View(cursorX, cursorY int) string {
+func (e *Engine) View(m model) string {
 	var rows []string
 	for y, row := range e.Grid {
 		var rowStrings []string
@@ -103,7 +113,7 @@ func (e *Engine) View(cursorX, cursorY int) string {
 				style = cellStyle
 			}
 
-			if x == cursorX && y == cursorY {
+			if x == m.cursorX && y == m.cursorY {
 				style = cursorStyle
 			}
 
@@ -112,7 +122,7 @@ func (e *Engine) View(cursorX, cursorY int) string {
 		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowStrings...))
 	}
 	s := lipgloss.JoinVertical(lipgloss.Left, rows...)
-	if e.Grid[cursorY][cursorX].state != given {
+	if e.Grid[m.cursorY][m.cursorX].state != given {
 		s += "\nz: primary, x: secondary, backspace: clear\n"
 	} else {
 		s += "\n\n"

@@ -76,7 +76,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.Width = msg.Width
 		m.viewport.Height = msg.Height - headerHeight
 		if m.state == gameView {
-			m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
+			m.viewport.SetContent(m.engine.View(*m))
 		}
 		return m, nil
 	case errMsg:
@@ -234,7 +234,7 @@ func (m *model) updateBrowseView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursorX = 0
 			m.cursorY = 0
 			m.levels = nil
-			m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
+			m.viewport.SetContent(m.engine.View(*m))
 		}
 	}
 	return m, nil
@@ -316,7 +316,7 @@ func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.engine.EvaluateSolution()
 	}
 
-	m.viewport.SetContent(m.engine.View(m.cursorX, m.cursorY))
+	m.viewport.SetContent(m.engine.View(*m))
 	m.viewport, cmd = m.viewport.Update(msg)
 	return m, cmd
 }

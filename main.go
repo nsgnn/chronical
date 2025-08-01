@@ -113,7 +113,12 @@ var renderCmd = &cobra.Command{
 			log.Fatalf("failed to create game: %v", err)
 		}
 
-		fmt.Println(game.View(0, 0))
+		m := model{
+			engine:  game,
+			cursorX: 0,
+			cursorY: 0,
+		}
+		fmt.Println(game.View(m))
 	},
 }
 
