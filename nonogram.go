@@ -198,15 +198,18 @@ func generateTomography(state string) ([][]int, [][]int) {
 	h := len(s)
 	w := 0
 	if h > 0 {
-		w = len(s[0])
+		for _, row := range s {
+			if len(row) > w {
+				w = len(row)
+			}
+		}
 	}
 
 	rowHints := make([][]int, h)
-	for y := range h {
+	for y, row := range s {
 		c := 0
 		var rowHint []int
-		for x := 0; x < w; x++ {
-			r := rune(s[y][x])
+		for _, r := range row {
 			if r == FilledTile {
 				c++
 			} else {
@@ -229,8 +232,12 @@ func generateTomography(state string) ([][]int, [][]int) {
 	for x := 0; x < w; x++ {
 		c := 0
 		var colHint []int
-		for y := range h {
-			r := rune(s[y][x])
+		for y := 0; y < h; y++ {
+			r := EmptyTile
+			if x < len(s[y]) {
+				r = rune(s[y][x])
+			}
+
 			if r == FilledTile {
 				c++
 			} else {
