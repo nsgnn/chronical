@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
@@ -72,9 +74,97 @@ var importCmd = &cobra.Command{
 	},
 }
 
+var testImportCmd = &cobra.Command{
+	Use:   "import [path]",
+	Short: "Test importing and exporting a level pack.",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		store, err := NewStore("nona.db")
+		if err != nil {
+			log.Fatalf("unable to init store: %v", err)
+		}
+
+		// Import the level pack
+		if err := store.ImportLevelPack(args[0]); err != nil {
+			log.Fatalf("unable to import level pack: %v", err)
+		}
+
+		// Get the last inserted level pack which is what we just inserted
+		rows, err := store.db.Query(`
+			SELECT id, name
+			FROM level_packs
+			ORDER BY id DESC
+			LIMIT 1;
+		`)
+		if err != nil {
+			log.Fatalf("unable to get last level pack: %v", err)
+		}
+		defer rows.Close()
+
+		var id int
+		var name string
+		for rows.Next() {
+			err := rows.Scan(&id, &name)
+			if err != nil {
+				log.Fatalf("unable to scan last level pack: %v", err)
+			}
+		}
+
+		// Export the level pack to a temporary file
+		tmpfile, err := os.CreateTemp("", "exported-level-pack-*.yaml")
+		if err != nil {
+			log.Fatalf("unable to create temporary file: %v", err)
+		}
+		defer os.Remove(tmpfile.Name())
+
+		if err := store.ExportLevelPack(id, tmpfile.Name()); err != nil {
+			log.Fatalf("unable to export level pack: %v", err)
+		}
+
+		// Compare the two files
+		original, err := os.ReadFile(args[0])
+		if err != nil {
+			log.Fatalf("unable to read original file: %v", err)
+		}
+		exported, err := os.ReadFile(tmpfile.Name())
+		if err != nil {
+			log.Fatalf("unable to read exported file: %v", err)
+		}
+
+		var originalYAML, exportedYAML LevelPackYAML
+		if err := yaml.Unmarshal(original, &originalYAML); err != nil {
+			log.Fatalf("unable to unmarshal original file: %v", err)
+		}
+		if err := yaml.Unmarshal(exported, &exportedYAML); err != nil {
+			log.Fatalf("unable to unmarshal exported file: %v", err)
+		}
+
+		originalNormalized, err := yaml.Marshal(&originalYAML)
+		if err != nil {
+			log.Fatalf("unable to marshal original file: %v", err)
+		}
+		exportedNormalized, err := yaml.Marshal(&exportedYAML)
+		if err != nil {
+			log.Fatalf("unable to marshal exported file: %v", err)
+		}
+
+		if string(originalNormalized) != string(exportedNormalized) {
+			log.Fatalf("exported file does not match original file")
+		}
+
+		fmt.Println("import/export test passed")
+	},
+}
+
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Tools for testing the game.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logToStdout, _ := cmd.Flags().GetBool("log-stdout")
+		if logToStdout {
+			log.SetOutput(os.Stdout)
+		}
+	},
 }
 
 var renderCmd = &cobra.Command{
@@ -128,6 +218,8 @@ func init() {
 	renderCmd.Flags().String("save", "", "The save state of the grid.")
 
 	testCmd.AddCommand(renderCmd)
+	testCmd.AddCommand(testImportCmd)
+	testCmd.PersistentFlags().Bool("log-stdout", false, "Write logs to stdout instead of a file.")
 
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(importCmd)

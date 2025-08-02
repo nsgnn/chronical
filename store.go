@@ -9,13 +9,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func sqlIn(query string, args []int) (string, []interface{}, error) {
+func sqlIn(query string, args []int) (string, []any, error) {
 	if len(args) == 0 {
 		return "", nil, fmt.Errorf("no arguments provided for IN clause")
 	}
 	placeholders := strings.Repeat("?,", len(args)-1) + "?"
 	query = strings.Replace(query, "?", placeholders, 1)
-	iargs := make([]interface{}, len(args))
+	iargs := make([]any, len(args))
 	for i, v := range args {
 		iargs[i] = v
 	}

@@ -144,24 +144,21 @@ func (e *NonogramEngine) gridView(m model) string {
 }
 
 func (e *NonogramEngine) colHintView() string {
-
-	var columns []string
-	for i := 0; i < e.hintColHeight; i++ {
-		var row []string
-		for _, hints := range e.colHints {
-			i := len(hints) - e.hintColHeight + i
-			var b string
-			if i >= 0 {
-				b = fmt.Sprintf("%d", hints[i])
-			} else {
-				b = " "
-			}
-			row = append(row, hintStyle.Width(cellWidth).Align(lipgloss.Center).Render(b))
+	var cols []string
+	for _, hints := range e.colHints {
+		var cells []string
+		// Pad hints to align to the bottom of the hint area.
+		for i := 0; i < e.hintColHeight-len(hints); i++ {
+			// an empty cell
+			cells = append(cells, hintStyle.Width(cellWidth).Render(" "))
 		}
-		columns = append(columns, lipgloss.JoinHorizontal(lipgloss.Top, row...))
+		// Add hint cells.
+		for _, h := range hints {
+			cells = append(cells, hintStyle.Width(cellWidth).Align(lipgloss.Right).Render(fmt.Sprintf("%d", h)))
+		}
+		cols = append(cols, lipgloss.JoinVertical(lipgloss.Left, cells...))
 	}
-	s := lipgloss.JoinVertical(lipgloss.Left, columns...)
-	return s
+	return lipgloss.JoinHorizontal(lipgloss.Top, cols...)
 }
 
 func (e *NonogramEngine) rowHintView() string {
