@@ -1,11 +1,119 @@
-name: Random Puzzle Pack
-author: Script
+name: Nonagram Easy (5x5)
+author: Tank
 version: 1
 description: A collection of randomly generated nonogram puzzles.
 levels:
-    - id: 1
-      name: Random Puzzle
-      author: Script
+    - id: 18
+      name: Amy Adams
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1.1.1
+        1..11
+        11111
+        1..11
+        1111.
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 13
+      name: Anthony Hopkins
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        1..11
+        1.1.1
+        11111
+        1111.
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 11
+      name: Brad Pitt
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        11111
+        1.1.1
+        1111.
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 8
+      name: Cate Blanchett
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        11111
+        1..11
+        1111.
+        1.1.1
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 12
+      name: Charlize Theron
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1.1.1
+        1111.
+        11111
+        1..11
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 17
+      name: Christian Bale
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        11111
+        1111.
+        1.1.1
+        1..11
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 5
+      name: Denzel Washington
+      author: Tank
       initial: |-
         .....
         .....
@@ -18,6 +126,240 @@ levels:
         1111.
         11111
         1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 14
+      name: Jennifer Lawrence
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        11111
+        1.1.1
+        1..11
+        1111.
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 10
+      name: Julia Roberts
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1111.
+        1..11
+        1.1.1
+        11111
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 16
+      name: Kate Winslet
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        1..11
+        1111.
+        1.1.1
+        11111
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 19
+      name: Keanu Reeves
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1111.
+        1..11
+        1.1.1
+        11111
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 3
+      name: Leonardo DiCaprio
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1.1.1
+        1..11
+        11111
+        1..11
+        1111.
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 2
+      name: Meryl Streep
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1111.
+        1..11
+        11111
+        1..11
+        1.1.1
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 9
+      name: Morgan Freeman
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1.1.1
+        1..11
+        11111
+        1..11
+        1111.
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 20
+      name: Natalie Portman
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        11111
+        1..11
+        1.1.1
+        1111.
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 7
+      name: Robert De Niro
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1111.
+        1..11
+        11111
+        1.1.1
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 15
+      name: Samuel L. Jackson
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        1111.
+        1.1.1
+        11111
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 4
+      name: Scarlett Johansson
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        11111
+        1111.
+        1..11
+        1.1.1
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 1
+      name: Tom Hanks
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1..11
+        11111
+        1.1.1
+        1111.
+        1..11
+      engine: nonogram
+      width: 0
+      height: 0
+    - id: 6
+      name: Viola Davis
+      author: Tank
+      initial: |-
+        .....
+        .....
+        .....
+        .....
+        .....
+      solution: |-
+        1.1.1
+        1111.
+        1..11
+        1..11
+        11111
       engine: nonogram
       width: 0
       height: 0
