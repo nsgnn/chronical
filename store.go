@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func sqlIn(query string, args []int) (string, []any, error) {
@@ -29,7 +29,7 @@ type Store struct {
 
 // NewStore creates a new Store and initializes the database connection.
 func NewStore(dataSourceName string) (*Store, error) {
-	db, err := sql.Open("sqlite3", dataSourceName)
+	db, err := sql.Open("sqlite", dataSourceName)
 	if err != nil {
 		return nil, err
 	}

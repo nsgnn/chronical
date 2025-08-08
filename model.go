@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,7 +33,6 @@ type model struct {
 	totalLevels    int
 	solvedLevels   int
 	saveIndicators map[int]string
-	viewport       viewport.Model
 }
 
 func NewModel(store *Store) model {
@@ -72,11 +70,8 @@ func (m model) Init() tea.Cmd {
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		headerHeight := 3
-		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height - headerHeight
 		if m.state == gameView {
-			m.viewport.SetContent(m.engine.View(*m))
+			m.engine.View(*m)
 		}
 		return m, nil
 	case errMsg:
@@ -102,7 +97,7 @@ func (m model) View() string {
 	if m.engine != nil {
 		title = fmt.Sprintf("%s - %s by %s", m.engine.GetGameName(), m.engine.GetLevel().Name, m.engine.GetLevel().Author)
 	} else {
-		title = "Nona Engine"
+		title = "chronical"
 	}
 	s := lipgloss.NewStyle().Background(lipgloss.Color("130")).Padding(0, 1).Render(title)
 	s += "\n\n"
@@ -113,7 +108,7 @@ func (m model) View() string {
 	case browseView:
 		s += m.viewBrowseView()
 	case gameView:
-		s += m.viewport.View()
+		s += m.engine.View(m)
 	case exportView:
 		s += m.viewExportView()
 	}
@@ -234,7 +229,6 @@ func (m *model) updateBrowseView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursorX = 0
 			m.cursorY = 0
 			m.levels = nil
-			m.viewport.SetContent(m.engine.View(*m))
 		}
 	}
 	return m, nil
@@ -316,8 +310,6 @@ func (m *model) updateGameView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.engine.Evaluate()
 	}
 
-	m.viewport.SetContent(m.engine.View(*m))
-	m.viewport, cmd = m.viewport.Update(msg)
 	return m, cmd
 }
 

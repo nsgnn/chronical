@@ -1,4 +1,4 @@
-name: Nonagram Easy (5x5)
+name: Nonogram Easy (5x5)
 author: Tank
 version: 1
 description: A collection of randomly generated nonogram puzzles.
@@ -19,8 +19,8 @@ levels:
         1..11
         1111.
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 13
       name: Anthony Hopkins
       author: Tank
@@ -34,11 +34,11 @@ levels:
         1..11
         1..11
         1.1.1
-        11111
+        11.11
         1111.
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 11
       name: Brad Pitt
       author: Tank
@@ -55,8 +55,8 @@ levels:
         1111.
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 8
       name: Cate Blanchett
       author: Tank
@@ -73,8 +73,8 @@ levels:
         1111.
         1.1.1
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 12
       name: Charlize Theron
       author: Tank
@@ -91,8 +91,8 @@ levels:
         1..11
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 17
       name: Christian Bale
       author: Tank
@@ -103,14 +103,14 @@ levels:
         .....
         .....
       solution: |-
-        11111
-        1111.
+        11.11
+        1.11.
         1.1.1
         1..11
-        1..11
+        1.111
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 5
       name: Denzel Washington
       author: Tank
@@ -127,8 +127,8 @@ levels:
         11111
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 14
       name: Jennifer Lawrence
       author: Tank
@@ -145,8 +145,8 @@ levels:
         1111.
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 10
       name: Julia Roberts
       author: Tank
@@ -163,8 +163,8 @@ levels:
         11111
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 16
       name: Kate Winslet
       author: Tank
@@ -181,8 +181,8 @@ levels:
         1.1.1
         11111
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 19
       name: Keanu Reeves
       author: Tank
@@ -199,8 +199,8 @@ levels:
         11111
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 3
       name: Leonardo DiCaprio
       author: Tank
@@ -217,8 +217,8 @@ levels:
         1..11
         1111.
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 2
       name: Meryl Streep
       author: Tank
@@ -235,8 +235,8 @@ levels:
         1..11
         1.1.1
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 9
       name: Morgan Freeman
       author: Tank
@@ -253,8 +253,8 @@ levels:
         1..11
         1111.
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 20
       name: Natalie Portman
       author: Tank
@@ -271,8 +271,8 @@ levels:
         1.1.1
         1111.
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 7
       name: Robert De Niro
       author: Tank
@@ -289,8 +289,8 @@ levels:
         1.1.1
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 15
       name: Samuel L. Jackson
       author: Tank
@@ -307,8 +307,8 @@ levels:
         11111
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 4
       name: Scarlett Johansson
       author: Tank
@@ -325,8 +325,8 @@ levels:
         1.1.1
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 1
       name: Tom Hanks
       author: Tank
@@ -343,8 +343,8 @@ levels:
         1111.
         1..11
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5
     - id: 6
       name: Viola Davis
       author: Tank
@@ -361,5 +361,5 @@ levels:
         1..11
         11111
       engine: nonogram
-      width: 0
-      height: 0
+      width: 5
+      height: 5

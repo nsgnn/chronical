@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -48,16 +49,18 @@ levels:
 	tmpfile.Close()
 
 	t.Run("ImportAndExport", func(t *testing.T) {
-		oldStdout := os.Stdout
+		oldStderr := os.Stderr
 		r, w, _ := os.Pipe()
-		os.Stdout = w
+		os.Stderr = w
+		log.SetOutput(w)
 
 		if err := db.ImportLevelPack(tmpfile.Name()); err != nil {
 			t.Fatalf("failed to import level pack: %v", err)
 		}
 
 		w.Close()
-		os.Stdout = oldStdout
+		os.Stderr = oldStderr
+		log.SetOutput(os.Stderr)
 
 		var buf bytes.Buffer
 		_, err := buf.ReadFrom(r)

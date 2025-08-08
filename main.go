@@ -13,19 +13,14 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "nona",
-	Short: "A terminal-based nonogram game.",
+	Use:   "chronical",
+	Short: "A cli-based puzzle engine supporting a variety of modes and plain text levelpacks.",
+	Long: `Chronical is a terminal-based puzzle game engine that supports a variety of puzzle types.
+It uses a plain text, YAML-based format for creating and sharing level packs, making it easy for anyone to create their own puzzles.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := NewStore("nona.db")
+		store, err := NewStore("chronical.db")
 		if err != nil {
 			log.Fatalf("unable to init store: %v", err)
-		}
-
-		// If the database is new, import the base levels.
-		if _, err := os.Stat("nona.db"); os.IsNotExist(err) {
-			if err := store.ImportLevelPack("baselevels.yaml"); err != nil {
-				log.Fatalf("unable to import base levels: %v", err)
-			}
 		}
 
 		m := NewModel(store)
@@ -39,9 +34,11 @@ var rootCmd = &cobra.Command{
 
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "Export a level pack to a YAML file.",
+	Short: "Export a level pack to a YAML file. This is useful for sharing level packs with others.",
+	Long: `Export a level pack to a YAML file. This is useful for sharing level packs with others.
+The exported file can be imported by other users using the import command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := NewStore("nona.db")
+		store, err := NewStore("chronical.db")
 		if err != nil {
 			log.Fatalf("unable to init store: %v", err)
 		}
@@ -58,10 +55,12 @@ var exportCmd = &cobra.Command{
 
 var importCmd = &cobra.Command{
 	Use:   "import [path]",
-	Short: "Import a level pack from a YAML file.",
+	Short: "Import a level pack from a YAML file. This is useful for playing level packs created by others.",
+	Long: `Import a level pack from a YAML file. This is useful for playing level packs created by others.
+The imported file will be added to your library of level packs.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := NewStore("nona.db")
+		store, err := NewStore("chronical.db")
 		if err != nil {
 			log.Fatalf("unable to init store: %v", err)
 		}
@@ -76,10 +75,12 @@ var importCmd = &cobra.Command{
 
 var testImportCmd = &cobra.Command{
 	Use:   "import [path]",
-	Short: "Test importing and exporting a level pack.",
+	Short: "Test importing and exporting a level pack to ensure that the process is working correctly.",
+	Long: `Test importing and exporting a level pack to ensure that the process is working correctly.
+This command is useful for developers who want to test the import/export functionality.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := NewStore("nona.db")
+		store, err := NewStore("chronical.db")
 		if err != nil {
 			log.Fatalf("unable to init store: %v", err)
 		}
@@ -157,8 +158,9 @@ var testImportCmd = &cobra.Command{
 }
 
 var testCmd = &cobra.Command{
-	Use:   "test",
-	Short: "Tools for testing the game.",
+	Use:    "test",
+	Short:  "Tools for testing the game.",
+	Hidden: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logToStdout, _ := cmd.Flags().GetBool("log-stdout")
 		if logToStdout {
@@ -169,7 +171,9 @@ var testCmd = &cobra.Command{
 
 var renderCmd = &cobra.Command{
 	Use:   "render",
-	Short: "Render a game state for debugging.",
+	Short: "Render a game state for debugging. This is useful for testing new game engines.",
+	Long: `Render a game state for debugging. This is useful for testing new game engines.
+You can use this command to see how a level will look without having to play it.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		engineName, _ := cmd.Flags().GetString("engine")
 		initialState, _ := cmd.Flags().GetString("initial")
@@ -219,6 +223,7 @@ func init() {
 
 	testCmd.AddCommand(renderCmd)
 	testCmd.AddCommand(testImportCmd)
+	testImportCmd.Flags().BoolP("help", "h", false, "Help message for the test import command")
 	testCmd.PersistentFlags().Bool("log-stdout", false, "Write logs to stdout instead of a file.")
 
 	rootCmd.AddCommand(exportCmd)
@@ -227,7 +232,7 @@ func init() {
 }
 
 func main() {
-	f, err := os.OpenFile("nona.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("chronical.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("unable to open log file: %v", err)
 	}

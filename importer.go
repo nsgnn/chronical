@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -79,12 +79,12 @@ func (s *Store) ImportLevelPack(path string) error {
 		}
 	}
 
-	fmt.Println("Successfully imported level pack:")
-	fmt.Printf("  Name: %s\n", levelPack.Name)
-	fmt.Printf("  Author: %s\n", levelPack.Author)
-	fmt.Printf("  Version: %d\n", levelPack.Version)
-	fmt.Printf("  Description: %s\n", levelPack.Description)
-	fmt.Printf("  Levels: %d\n", len(levelPackYAML.Levels))
+	log.Println("Successfully imported level pack:")
+	log.Printf("  Name: %s\n", levelPack.Name)
+	log.Printf("  Author: %s\n", levelPack.Author)
+	log.Printf("  Version: %d\n", levelPack.Version)
+	log.Printf("  Description: %s\n", levelPack.Description)
+	log.Printf("  Levels: %d\n", len(levelPackYAML.Levels))
 
 	return nil
 }
