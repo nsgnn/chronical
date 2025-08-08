@@ -1,0 +1,5 @@
+chronical.log
+chronical.db
+.crush/
+.env
+chronical
