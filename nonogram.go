@@ -31,18 +31,18 @@ const (
 
 var (
 	renderStyles = map[rune]lipgloss.Style{
-		FilledTile:     lipgloss.NewStyle().Background(lipgloss.Color("255")), // White background
-		KnownEmptyTile: lipgloss.NewStyle().Foreground(lipgloss.Color("245")), // Light grey foreground
-		EmptyTile:      lipgloss.NewStyle().Foreground(lipgloss.Color("250")), // Dim grey foreground
+		FilledTile:     lipgloss.NewStyle().Background(lipgloss.Color("255")).Foreground(lipgloss.Color("255")), // White background
+		KnownEmptyTile: lipgloss.NewStyle().Foreground(lipgloss.Color("245")),                                   // Light grey foreground
+		EmptyTile:      lipgloss.NewStyle().Foreground(lipgloss.Color("250")),                                   // Dim grey foreground
 	}
-	highlightStyle = lipgloss.NewStyle().Background(lipgloss.Color("205")) // Magenta background for the cursor
+	highlightStyle = lipgloss.NewStyle().Background(lipgloss.Color("205")).Foreground(lipgloss.Color("255")) // Magenta background for the cursor
 	hintStyle      = lipgloss.NewStyle()
 	renderRunes    = map[rune]string{
-		FilledTile:     " ",
-		KnownEmptyTile: " X",
-		EmptyTile:      " ·",
+		FilledTile:     "⬤",
+		KnownEmptyTile: "⊗",
+		EmptyTile:      "◯",
 	}
-	cellWidth = 2
+	cellWidth = 3
 )
 
 type NonogramEngine struct {
@@ -59,20 +59,7 @@ func (e *NonogramEngine) New(l Level, s *Save) (GameEngine, error) {
 		return nil, err
 	}
 
-	e.rowHints, e.colHints = generateTomography(l.Solution)
-
-	for _, hints := range e.colHints {
-		if len(hints) > e.hintColHeight {
-			e.hintColHeight = len(hints)
-		}
-	}
-
-	for _, hints := range e.rowHints {
-		if len(hints) > e.hintRowWidth {
-			e.hintRowWidth = len(hints)
-		}
-	}
-	e.hintRowWidth *= 3 // Each hint is typically 3 characters " 4 " or "10 "
+	e.updateHintInfo()
 
 	return e, nil
 }
@@ -123,7 +110,7 @@ func tileView(c Cell, h bool) string {
 		//TODO structured log out the unknown tile.
 		r = renderRunes[EmptyTile]
 	}
-	return s.Width(cellWidth).Render(r)
+	return s.Width(cellWidth).AlignHorizontal(lipgloss.Center).Render(r)
 }
 
 func (e *NonogramEngine) gridView(m model) string {
@@ -154,7 +141,7 @@ func (e *NonogramEngine) colHintView() string {
 		}
 		// Add hint cells.
 		for _, h := range hints {
-			cells = append(cells, hintStyle.Width(cellWidth).Align(lipgloss.Right).Render(fmt.Sprintf("%d", h)))
+			cells = append(cells, hintStyle.Width(cellWidth).Align(lipgloss.Center).Render(fmt.Sprintf("%d", h)))
 		}
 		cols = append(cols, lipgloss.JoinVertical(lipgloss.Left, cells...))
 	}
@@ -254,6 +241,23 @@ func generateTomography(state string) ([][]int, [][]int) {
 	}
 
 	return rowHints, colHints
+}
+
+func (e *NonogramEngine) updateHintInfo() {
+	e.rowHints, e.colHints = generateTomography(e.Level.Solution)
+
+	for _, hints := range e.colHints {
+		if len(hints) > e.hintColHeight {
+			e.hintColHeight = len(hints)
+		}
+	}
+
+	for _, hints := range e.rowHints {
+		if len(hints) > e.hintRowWidth {
+			e.hintRowWidth = len(hints)
+		}
+	}
+	e.hintRowWidth *= 3 // Each hint is typically 3 characters " 4 " or "10 "
 }
 
 // cmpTomo compares two sets of tomography hints for equality.
