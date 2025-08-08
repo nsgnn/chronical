@@ -58,7 +58,7 @@ var importCmd = &cobra.Command{
 	Short: "Import a level pack from a YAML file. This is useful for playing level packs created by others.",
 	Long: `Import a level pack from a YAML file. This is useful for playing level packs created by others.
 The imported file will be added to your library of level packs.`,
-	Args:  cobra.ExactArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		store, err := NewStore("chronical.db")
 		if err != nil {
@@ -78,7 +78,7 @@ var testImportCmd = &cobra.Command{
 	Short: "Test importing and exporting a level pack to ensure that the process is working correctly.",
 	Long: `Test importing and exporting a level pack to ensure that the process is working correctly.
 This command is useful for developers who want to test the import/export functionality.`,
-	Args:  cobra.ExactArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		store, err := NewStore("chronical.db")
 		if err != nil {
